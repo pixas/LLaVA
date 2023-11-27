@@ -1,23 +1,44 @@
 #!/bin/bash
 
-deepspeed  llava/train/train_mem.py \
+#SBATCH -J FT-3gates-llava7b
+#SBATCH --partition=x090
+#SBATCH --nodes=2
+#SBATCH --gres=gpu:4  
+#SBATCH --cpus-per-task=8
+#SBATCH --ntasks-per-node=1    
+#SBATCH --mem-per-cpu=4G  
+#SBATCH --output=logs/llava7b_4moe.out
+###SBATCH --kill-on-bad-exit=1
+
+nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
+nodes_array=($nodes)
+head_node=${nodes_array[0]}
+head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
+
+echo Node IP: $head_node_ip nodes_array: $nodes_array
+export LOGLEVEL=INFO
+export NCCL_DEBUG=ERROR
+export NCCL_SOCKET_IFNAME="eth0"
+export MASTER_PORT=29549
+srun deepspeed --num_gpus 4 --num_nodes 2 \
+    llava/train/train_mem.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero3.json \
     --model_name_or_path /remote-home/share/models/vicuna-7b-v1.5 \
     --version v1 \
     --data_path ./playground/data/llava_v1_5_mix665k_clean.json \
     --image_folder ./playground/data \
-    --vision_tower openai/clip-vit-large-patch14-336 \
-    --pretrain_mm_mlp_adapter /remote-home/syjiang/checkpoints/llava-v1.5-7b-pretrain-baseline/mm_projector.bin \
-    --mm_projector_type mlp2x_gelu \
-    --mm_projector_gates 3 \
+    --vision_tower /remote-home/syjiang/.cache/huggingface/hub/models--openai--clip-vit-large-patch14-336 \
+    --pretrain_mm_mlp_adapter /remote-home/syjiang/checkpoints/llava-v1.5-7b-pretrain-moe/mm_projector.bin \
+    --mm_projector_type moe \
+    --mm_projector_experts 4 \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --output_dir /remote-home/syjiang/checkpoints/llava-v1.5-7b-baseline-lora \
+    --output_dir /remote-home/syjiang/checkpoints/llava-v1.5-7b-4moe-lora \
     --num_train_epochs 1 \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 2 \

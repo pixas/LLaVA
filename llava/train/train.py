@@ -33,7 +33,7 @@ from llava.train.llava_trainer import LLaVATrainer
 from llava import conversation as conversation_lib
 from llava.model import *
 from llava.mm_utils import tokenizer_image_token
-
+from llava.model.multimodal_projector.builder import Qformer, GatedLinear
 from PIL import Image
 
 
@@ -45,6 +45,13 @@ def rank0_print(*args):
         print(*args)
 
 
+# @dataclass
+# class ProjectorArguments:
+#     mm_projector_type: Optional[str] = field(default='linear')
+#     mm_projector_gates: Optional[int] = field(default=1)
+#     mm_projector_experts: Optional[int] = field(default=1)
+    
+
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="facebook/opt-125m")
@@ -54,7 +61,11 @@ class ModelArguments:
     vision_tower: Optional[str] = field(default=None)
     mm_vision_select_layer: Optional[int] = field(default=-1)   # default to the last layer
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
-    mm_projector_type: Optional[str] = field(default='linear')
+    mm_projector_type: Optional[str] = field(default='mlp2x_gelu')
+    mm_projector_gates: Optional[int] = field(default=1)
+    mm_projector_experts: Optional[int] = field(default=4)
+    qformer_text_input: Optional[bool] = field(default=False)
+    qformer_use_pretrained: Optional[bool] = field(default=False)
     mm_use_im_start_end: bool = field(default=False)
     mm_use_im_patch_token: bool = field(default=True)
     mm_vision_select_feature: Optional[str] = field(default="patch")
@@ -161,10 +172,12 @@ def get_mm_adapter_state_maybe_zero_3(named_params, keys_to_match):
     return to_return
 
 
-def find_all_linear_names(model):
+def find_all_linear_names(model, wrap_projector=False):
     cls = torch.nn.Linear
     lora_module_names = set()
     multimodal_keywords = ['mm_projector', 'vision_tower', 'vision_resampler']
+    if wrap_projector:
+        multimodal_keywords.remove("mm_projector")
     for name, module in model.named_modules():
         if any(mm_keyword in name for mm_keyword in multimodal_keywords):
             continue
@@ -820,13 +833,15 @@ def train():
             def make_inputs_require_grad(module, input, output):
                 output.requires_grad_(True)
             model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
-
+    # if training_args.local_rank == 0 or training_args.local_rank == -1:
+    #     for name, param in model.named_parameters():
+    #         print(name)
     if training_args.lora_enable:
         from peft import LoraConfig, get_peft_model
         lora_config = LoraConfig(
             r=training_args.lora_r,
             lora_alpha=training_args.lora_alpha,
-            target_modules=find_all_linear_names(model),
+            target_modules=find_all_linear_names(model, True if model_args.mm_projector_type == 'qformer' else False),
             lora_dropout=training_args.lora_dropout,
             bias=training_args.lora_bias,
             task_type="CAUSAL_LM",
@@ -870,7 +885,17 @@ def train():
             conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
-
+    # if training_args.local_rank == 0 or training_args.local_rank == -1:
+    #     for name, param in model.named_parameters():
+    #         print(name)
+    # print(tokenizer)
+    # print(model.get_model())
+    # model1 = Qformer(1024, 4096, qformer_text_input=model_args.qformer_text_input)
+    # model1 = GatedLinear(1024, 4096, 3)
+    # for name, value in model1.named_parameters():
+    #     print(name, value.shape)
+    model.get_model().get_tokenizer(tokenizer)
+    # print(model.get_model().tokenizer)
     if model_args.vision_tower is not None:
         model.get_model().initialize_vision_modules(
             model_args=model_args,
@@ -905,7 +930,10 @@ def train():
         training_args.use_im_start_end = model_args.mm_use_im_start_end
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
+    
 
+    # if training_args.local_rank == 0 or training_args.local_rank == -1:
+    # print(model.tokenizer, tokenizer)
     if training_args.bits in [4, 8]:
         from peft.tuners.lora import LoraLayer
         for name, module in model.named_modules():
@@ -921,6 +949,7 @@ def train():
 
     data_module = make_supervised_data_module(tokenizer=tokenizer,
                                               data_args=data_args)
+    # print(model)
     trainer = LLaVATrainer(model=model,
                     tokenizer=tokenizer,
                     args=training_args,

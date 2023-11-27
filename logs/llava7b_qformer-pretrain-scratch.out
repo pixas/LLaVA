@@ -1,0 +1,2076 @@
+Node IP: 10.0.1.4 nodes_array: x090-5
+x090-5-0,1,2,3
+x090-8-0,1,2,3
+master_addr is only used for static rdzv_backend and when rdzv_endpoint is not specified.
+master_addr is only used for static rdzv_backend and when rdzv_endpoint is not specified.
+WARNING:__main__:
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+INFO:torch.distributed.launcher.api:Starting elastic_operator with launch configs:
+  entrypoint       : llava/train/train_mem.py
+  min_nodes        : 2
+  max_nodes        : 2
+  nproc_per_node   : 4
+  run_id           : 29577
+  rdzv_backend     : c10d
+  rdzv_endpoint    : 10.0.1.4:29577
+  rdzv_configs     : {'timeout': 900}
+  max_restarts     : 0
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+WARNING:__main__:
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+INFO:torch.distributed.launcher.api:Starting elastic_operator with launch configs:
+  entrypoint       : llava/train/train_mem.py
+  min_nodes        : 2
+  max_nodes        : 2
+  nproc_per_node   : 4
+  run_id           : 29577
+  rdzv_backend     : c10d
+  rdzv_endpoint    : 10.0.1.4:29577
+  rdzv_configs     : {'timeout': 900}
+  max_restarts     : 0
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+INFO:torch.distributed.elastic.agent.server.local_elastic_agent:log directory set to: /tmp/torchelastic_robl_f3g/29577_c1naro8p
+INFO:torch.distributed.elastic.agent.server.api:[default] starting workers for entrypoint: python
+INFO:torch.distributed.elastic.agent.server.api:[default] Rendezvous'ing worker group
+INFO:torch.distributed.elastic.agent.server.local_elastic_agent:log directory set to: /tmp/torchelastic_68uobhu6/29577_pzbhe6mk
+INFO:torch.distributed.elastic.agent.server.api:[default] starting workers for entrypoint: python
+INFO:torch.distributed.elastic.agent.server.api:[default] Rendezvous'ing worker group
+INFO:torch.distributed.elastic.agent.server.api:[default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=x090-5
+  master_port=37439
+  group_rank=0
+  group_world_size=2
+  local_ranks=[0, 1, 2, 3]
+  role_ranks=[0, 1, 2, 3]
+  global_ranks=[0, 1, 2, 3]
+  role_world_sizes=[8, 8, 8, 8]
+  global_world_sizes=[8, 8, 8, 8]
+
+INFO:torch.distributed.elastic.agent.server.api:[default] Starting worker group
+INFO:torch.distributed.elastic.agent.server.api:[default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=x090-5
+  master_port=37439
+  group_rank=1
+  group_world_size=2
+  local_ranks=[0, 1, 2, 3]
+  role_ranks=[4, 5, 6, 7]
+  global_ranks=[4, 5, 6, 7]
+  role_world_sizes=[8, 8, 8, 8]
+  global_world_sizes=[8, 8, 8, 8]
+
+INFO:torch.distributed.elastic.agent.server.api:[default] Starting worker group
+INFO:torch.distributed.elastic.agent.server.local_elastic_agent:Environment variable 'TORCHELASTIC_ENABLE_FILE_TIMER' not found. Do not start FileTimerServer.
+INFO:torch.distributed.elastic.multiprocessing:Setting worker0 reply file to: /tmp/torchelastic_robl_f3g/29577_c1naro8p/attempt_0/0/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker1 reply file to: /tmp/torchelastic_robl_f3g/29577_c1naro8p/attempt_0/1/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker2 reply file to: /tmp/torchelastic_robl_f3g/29577_c1naro8p/attempt_0/2/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker3 reply file to: /tmp/torchelastic_robl_f3g/29577_c1naro8p/attempt_0/3/error.json
+INFO:torch.distributed.elastic.agent.server.local_elastic_agent:Environment variable 'TORCHELASTIC_ENABLE_FILE_TIMER' not found. Do not start FileTimerServer.
+INFO:torch.distributed.elastic.multiprocessing:Setting worker0 reply file to: /tmp/torchelastic_68uobhu6/29577_pzbhe6mk/attempt_0/0/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker1 reply file to: /tmp/torchelastic_68uobhu6/29577_pzbhe6mk/attempt_0/1/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker2 reply file to: /tmp/torchelastic_68uobhu6/29577_pzbhe6mk/attempt_0/2/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker3 reply file to: /tmp/torchelastic_68uobhu6/29577_pzbhe6mk/attempt_0/3/error.json
+[2023-11-24 16:36:51,936] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,936] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,937] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,950] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,950] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,950] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,937] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:36:51,950] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-24 16:37:25,788] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,788] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,788] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,788] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,788] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,788] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,803] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,804] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,805] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,805] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,806] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,806] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,794] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,795] [INFO] [comm.py:594:init_distributed] cdb=None
+[2023-11-24 16:37:25,795] [INFO] [comm.py:625:init_distributed] Initializing TorchBackend in DeepSpeed with backend nccl
+[2023-11-24 16:37:25,806] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2023-11-24 16:37:25,807] [INFO] [comm.py:594:init_distributed] cdb=None
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+You are using a model of type llama to instantiate a model of type llava. This is not supported for all configurations of models and can yield errors.
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:30<00:30, 30.51s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:32<00:32, 32.70s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:33<00:33, 33.50s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:33<00:33, 33.98s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:39<00:00, 17.94s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:39<00:00, 19.82s/it]
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x146e3a916b30>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 2902cc18-bb0b-427d-8015-b20f2c868ec7)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+    self._prepare_proxy(conn)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x146e3a916b30>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x146e3a916b30>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x146e3a916b30>: Failed to establish a new connection: [Errno 111] Connection refused')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    model.get_model().initialize_vision_modules(
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+    vision_tower = build_vision_tower(model_args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+    self.load_model()
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    metadata = get_hf_file_metadata(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+    r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+    response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+    return super().send(request, *args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+    raise ProxyError(e, request=request)
+requests.exceptions.ProxyError: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x146e3a916b30>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 2902cc18-bb0b-427d-8015-b20f2c868ec7)')
+Loading checkpoint shards: 100%|██████████| 2/2 [00:47<00:00, 22.28s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:47<00:00, 23.84s/it]
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x153c5f0ff3a0>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 4390d783-afce-480b-a631-e046dc041aef)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+    self._prepare_proxy(conn)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x153c5f0ff3a0>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x153c5f0ff3a0>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x153c5f0ff3a0>: Failed to establish a new connection: [Errno 111] Connection refused')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    model.get_model().initialize_vision_modules(
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+    vision_tower = build_vision_tower(model_args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+    self.load_model()
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    metadata = get_hf_file_metadata(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+    r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+    response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+    return super().send(request, *args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+    raise ProxyError(e, request=request)
+requests.exceptions.ProxyError: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x153c5f0ff3a0>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 4390d783-afce-480b-a631-e046dc041aef)')
+Loading checkpoint shards: 100%|██████████| 2/2 [00:48<00:00, 22.72s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:48<00:00, 24.34s/it]
+model.embed_tokens.weight
+model.layers.0.self_attn.q_proj.weight
+model.layers.0.self_attn.k_proj.weight
+model.layers.0.self_attn.v_proj.weight
+model.layers.0.self_attn.o_proj.weight
+model.layers.0.mlp.gate_proj.weight
+model.layers.0.mlp.up_proj.weight
+model.layers.0.mlp.down_proj.weight
+model.layers.0.input_layernorm.weight
+model.layers.0.post_attention_layernorm.weight
+model.layers.1.self_attn.q_proj.weight
+model.layers.1.self_attn.k_proj.weight
+model.layers.1.self_attn.v_proj.weight
+model.layers.1.self_attn.o_proj.weight
+model.layers.1.mlp.gate_proj.weight
+model.layers.1.mlp.up_proj.weight
+model.layers.1.mlp.down_proj.weight
+model.layers.1.input_layernorm.weight
+model.layers.1.post_attention_layernorm.weight
+model.layers.2.self_attn.q_proj.weight
+model.layers.2.self_attn.k_proj.weight
+model.layers.2.self_attn.v_proj.weight
+model.layers.2.self_attn.o_proj.weight
+model.layers.2.mlp.gate_proj.weight
+model.layers.2.mlp.up_proj.weight
+model.layers.2.mlp.down_proj.weight
+model.layers.2.input_layernorm.weight
+model.layers.2.post_attention_layernorm.weight
+model.layers.3.self_attn.q_proj.weight
+model.layers.3.self_attn.k_proj.weight
+model.layers.3.self_attn.v_proj.weight
+model.layers.3.self_attn.o_proj.weight
+model.layers.3.mlp.gate_proj.weight
+model.layers.3.mlp.up_proj.weight
+model.layers.3.mlp.down_proj.weight
+model.layers.3.input_layernorm.weight
+model.layers.3.post_attention_layernorm.weight
+model.layers.4.self_attn.q_proj.weight
+model.layers.4.self_attn.k_proj.weight
+model.layers.4.self_attn.v_proj.weight
+model.layers.4.self_attn.o_proj.weight
+model.layers.4.mlp.gate_proj.weight
+model.layers.4.mlp.up_proj.weight
+model.layers.4.mlp.down_proj.weight
+model.layers.4.input_layernorm.weight
+model.layers.4.post_attention_layernorm.weight
+model.layers.5.self_attn.q_proj.weight
+model.layers.5.self_attn.k_proj.weight
+model.layers.5.self_attn.v_proj.weight
+model.layers.5.self_attn.o_proj.weight
+model.layers.5.mlp.gate_proj.weight
+model.layers.5.mlp.up_proj.weight
+model.layers.5.mlp.down_proj.weight
+model.layers.5.input_layernorm.weight
+model.layers.5.post_attention_layernorm.weight
+model.layers.6.self_attn.q_proj.weight
+model.layers.6.self_attn.k_proj.weight
+model.layers.6.self_attn.v_proj.weight
+model.layers.6.self_attn.o_proj.weight
+model.layers.6.mlp.gate_proj.weight
+model.layers.6.mlp.up_proj.weight
+model.layers.6.mlp.down_proj.weight
+model.layers.6.input_layernorm.weight
+model.layers.6.post_attention_layernorm.weight
+model.layers.7.self_attn.q_proj.weight
+model.layers.7.self_attn.k_proj.weight
+model.layers.7.self_attn.v_proj.weight
+model.layers.7.self_attn.o_proj.weight
+model.layers.7.mlp.gate_proj.weight
+model.layers.7.mlp.up_proj.weight
+model.layers.7.mlp.down_proj.weight
+model.layers.7.input_layernorm.weight
+model.layers.7.post_attention_layernorm.weight
+model.layers.8.self_attn.q_proj.weight
+model.layers.8.self_attn.k_proj.weight
+model.layers.8.self_attn.v_proj.weight
+model.layers.8.self_attn.o_proj.weight
+model.layers.8.mlp.gate_proj.weight
+model.layers.8.mlp.up_proj.weight
+model.layers.8.mlp.down_proj.weight
+model.layers.8.input_layernorm.weight
+model.layers.8.post_attention_layernorm.weight
+model.layers.9.self_attn.q_proj.weight
+model.layers.9.self_attn.k_proj.weight
+model.layers.9.self_attn.v_proj.weight
+model.layers.9.self_attn.o_proj.weight
+model.layers.9.mlp.gate_proj.weight
+model.layers.9.mlp.up_proj.weight
+model.layers.9.mlp.down_proj.weight
+model.layers.9.input_layernorm.weight
+model.layers.9.post_attention_layernorm.weight
+model.layers.10.self_attn.q_proj.weight
+model.layers.10.self_attn.k_proj.weight
+model.layers.10.self_attn.v_proj.weight
+model.layers.10.self_attn.o_proj.weight
+model.layers.10.mlp.gate_proj.weight
+model.layers.10.mlp.up_proj.weight
+model.layers.10.mlp.down_proj.weight
+model.layers.10.input_layernorm.weight
+model.layers.10.post_attention_layernorm.weight
+model.layers.11.self_attn.q_proj.weight
+model.layers.11.self_attn.k_proj.weight
+model.layers.11.self_attn.v_proj.weight
+model.layers.11.self_attn.o_proj.weight
+model.layers.11.mlp.gate_proj.weight
+model.layers.11.mlp.up_proj.weight
+model.layers.11.mlp.down_proj.weight
+model.layers.11.input_layernorm.weight
+model.layers.11.post_attention_layernorm.weight
+model.layers.12.self_attn.q_proj.weight
+model.layers.12.self_attn.k_proj.weight
+model.layers.12.self_attn.v_proj.weight
+model.layers.12.self_attn.o_proj.weight
+model.layers.12.mlp.gate_proj.weight
+model.layers.12.mlp.up_proj.weight
+model.layers.12.mlp.down_proj.weight
+model.layers.12.input_layernorm.weight
+model.layers.12.post_attention_layernorm.weight
+model.layers.13.self_attn.q_proj.weight
+model.layers.13.self_attn.k_proj.weight
+model.layers.13.self_attn.v_proj.weight
+model.layers.13.self_attn.o_proj.weight
+model.layers.13.mlp.gate_proj.weight
+model.layers.13.mlp.up_proj.weight
+model.layers.13.mlp.down_proj.weight
+model.layers.13.input_layernorm.weight
+model.layers.13.post_attention_layernorm.weight
+model.layers.14.self_attn.q_proj.weight
+model.layers.14.self_attn.k_proj.weight
+model.layers.14.self_attn.v_proj.weight
+model.layers.14.self_attn.o_proj.weight
+model.layers.14.mlp.gate_proj.weight
+model.layers.14.mlp.up_proj.weight
+model.layers.14.mlp.down_proj.weight
+model.layers.14.input_layernorm.weight
+model.layers.14.post_attention_layernorm.weight
+model.layers.15.self_attn.q_proj.weight
+model.layers.15.self_attn.k_proj.weight
+model.layers.15.self_attn.v_proj.weight
+model.layers.15.self_attn.o_proj.weight
+model.layers.15.mlp.gate_proj.weight
+model.layers.15.mlp.up_proj.weight
+model.layers.15.mlp.down_proj.weight
+model.layers.15.input_layernorm.weight
+model.layers.15.post_attention_layernorm.weight
+model.layers.16.self_attn.q_proj.weight
+model.layers.16.self_attn.k_proj.weight
+model.layers.16.self_attn.v_proj.weight
+model.layers.16.self_attn.o_proj.weight
+model.layers.16.mlp.gate_proj.weight
+model.layers.16.mlp.up_proj.weight
+model.layers.16.mlp.down_proj.weight
+model.layers.16.input_layernorm.weight
+model.layers.16.post_attention_layernorm.weight
+model.layers.17.self_attn.q_proj.weight
+model.layers.17.self_attn.k_proj.weight
+model.layers.17.self_attn.v_proj.weight
+model.layers.17.self_attn.o_proj.weight
+model.layers.17.mlp.gate_proj.weight
+model.layers.17.mlp.up_proj.weight
+model.layers.17.mlp.down_proj.weight
+model.layers.17.input_layernorm.weight
+model.layers.17.post_attention_layernorm.weight
+model.layers.18.self_attn.q_proj.weight
+model.layers.18.self_attn.k_proj.weight
+model.layers.18.self_attn.v_proj.weight
+model.layers.18.self_attn.o_proj.weight
+model.layers.18.mlp.gate_proj.weight
+model.layers.18.mlp.up_proj.weight
+model.layers.18.mlp.down_proj.weight
+model.layers.18.input_layernorm.weight
+model.layers.18.post_attention_layernorm.weight
+model.layers.19.self_attn.q_proj.weight
+model.layers.19.self_attn.k_proj.weight
+model.layers.19.self_attn.v_proj.weight
+model.layers.19.self_attn.o_proj.weight
+model.layers.19.mlp.gate_proj.weight
+model.layers.19.mlp.up_proj.weight
+model.layers.19.mlp.down_proj.weight
+model.layers.19.input_layernorm.weight
+model.layers.19.post_attention_layernorm.weight
+model.layers.20.self_attn.q_proj.weight
+model.layers.20.self_attn.k_proj.weight
+model.layers.20.self_attn.v_proj.weight
+model.layers.20.self_attn.o_proj.weight
+model.layers.20.mlp.gate_proj.weight
+model.layers.20.mlp.up_proj.weight
+model.layers.20.mlp.down_proj.weight
+model.layers.20.input_layernorm.weight
+model.layers.20.post_attention_layernorm.weight
+model.layers.21.self_attn.q_proj.weight
+model.layers.21.self_attn.k_proj.weight
+model.layers.21.self_attn.v_proj.weight
+model.layers.21.self_attn.o_proj.weight
+model.layers.21.mlp.gate_proj.weight
+model.layers.21.mlp.up_proj.weight
+model.layers.21.mlp.down_proj.weight
+model.layers.21.input_layernorm.weight
+model.layers.21.post_attention_layernorm.weight
+model.layers.22.self_attn.q_proj.weight
+model.layers.22.self_attn.k_proj.weight
+model.layers.22.self_attn.v_proj.weight
+model.layers.22.self_attn.o_proj.weight
+model.layers.22.mlp.gate_proj.weight
+model.layers.22.mlp.up_proj.weight
+model.layers.22.mlp.down_proj.weight
+model.layers.22.input_layernorm.weight
+model.layers.22.post_attention_layernorm.weight
+model.layers.23.self_attn.q_proj.weight
+model.layers.23.self_attn.k_proj.weight
+model.layers.23.self_attn.v_proj.weight
+model.layers.23.self_attn.o_proj.weight
+model.layers.23.mlp.gate_proj.weight
+model.layers.23.mlp.up_proj.weight
+model.layers.23.mlp.down_proj.weight
+model.layers.23.input_layernorm.weight
+model.layers.23.post_attention_layernorm.weight
+model.layers.24.self_attn.q_proj.weight
+model.layers.24.self_attn.k_proj.weight
+model.layers.24.self_attn.v_proj.weight
+model.layers.24.self_attn.o_proj.weight
+model.layers.24.mlp.gate_proj.weight
+model.layers.24.mlp.up_proj.weight
+model.layers.24.mlp.down_proj.weight
+model.layers.24.input_layernorm.weight
+model.layers.24.post_attention_layernorm.weight
+model.layers.25.self_attn.q_proj.weight
+model.layers.25.self_attn.k_proj.weight
+model.layers.25.self_attn.v_proj.weight
+model.layers.25.self_attn.o_proj.weight
+model.layers.25.mlp.gate_proj.weight
+model.layers.25.mlp.up_proj.weight
+model.layers.25.mlp.down_proj.weight
+model.layers.25.input_layernorm.weight
+model.layers.25.post_attention_layernorm.weight
+model.layers.26.self_attn.q_proj.weight
+model.layers.26.self_attn.k_proj.weight
+model.layers.26.self_attn.v_proj.weight
+model.layers.26.self_attn.o_proj.weight
+model.layers.26.mlp.gate_proj.weight
+model.layers.26.mlp.up_proj.weight
+model.layers.26.mlp.down_proj.weight
+model.layers.26.input_layernorm.weight
+model.layers.26.post_attention_layernorm.weight
+model.layers.27.self_attn.q_proj.weight
+model.layers.27.self_attn.k_proj.weight
+model.layers.27.self_attn.v_proj.weight
+model.layers.27.self_attn.o_proj.weight
+model.layers.27.mlp.gate_proj.weight
+model.layers.27.mlp.up_proj.weight
+model.layers.27.mlp.down_proj.weight
+model.layers.27.input_layernorm.weight
+model.layers.27.post_attention_layernorm.weight
+model.layers.28.self_attn.q_proj.weight
+model.layers.28.self_attn.k_proj.weight
+model.layers.28.self_attn.v_proj.weight
+model.layers.28.self_attn.o_proj.weight
+model.layers.28.mlp.gate_proj.weight
+model.layers.28.mlp.up_proj.weight
+model.layers.28.mlp.down_proj.weight
+model.layers.28.input_layernorm.weight
+model.layers.28.post_attention_layernorm.weight
+model.layers.29.self_attn.q_proj.weight
+model.layers.29.self_attn.k_proj.weight
+model.layers.29.self_attn.v_proj.weight
+model.layers.29.self_attn.o_proj.weight
+model.layers.29.mlp.gate_proj.weight
+model.layers.29.mlp.up_proj.weight
+model.layers.29.mlp.down_proj.weight
+model.layers.29.input_layernorm.weight
+model.layers.29.post_attention_layernorm.weight
+model.layers.30.self_attn.q_proj.weight
+model.layers.30.self_attn.k_proj.weight
+model.layers.30.self_attn.v_proj.weight
+model.layers.30.self_attn.o_proj.weight
+model.layers.30.mlp.gate_proj.weight
+model.layers.30.mlp.up_proj.weight
+model.layers.30.mlp.down_proj.weight
+model.layers.30.input_layernorm.weight
+model.layers.30.post_attention_layernorm.weight
+model.layers.31.self_attn.q_proj.weight
+model.layers.31.self_attn.k_proj.weight
+model.layers.31.self_attn.v_proj.weight
+model.layers.31.self_attn.o_proj.weight
+model.layers.31.mlp.gate_proj.weight
+model.layers.31.mlp.up_proj.weight
+model.layers.31.mlp.down_proj.weight
+model.layers.31.input_layernorm.weight
+model.layers.31.post_attention_layernorm.weight
+model.norm.weight
+lm_head.weight
+model.embed_tokens.weight
+model.layers.0.self_attn.q_proj.weight
+model.layers.0.self_attn.k_proj.weight
+model.layers.0.self_attn.v_proj.weight
+model.layers.0.self_attn.o_proj.weight
+model.layers.0.mlp.gate_proj.weight
+model.layers.0.mlp.up_proj.weight
+model.layers.0.mlp.down_proj.weight
+model.layers.0.input_layernorm.weight
+model.layers.0.post_attention_layernorm.weight
+model.layers.1.self_attn.q_proj.weight
+model.layers.1.self_attn.k_proj.weight
+model.layers.1.self_attn.v_proj.weight
+model.layers.1.self_attn.o_proj.weight
+model.layers.1.mlp.gate_proj.weight
+model.layers.1.mlp.up_proj.weight
+model.layers.1.mlp.down_proj.weight
+model.layers.1.input_layernorm.weight
+model.layers.1.post_attention_layernorm.weight
+model.layers.2.self_attn.q_proj.weight
+model.layers.2.self_attn.k_proj.weight
+model.layers.2.self_attn.v_proj.weight
+model.layers.2.self_attn.o_proj.weight
+model.layers.2.mlp.gate_proj.weight
+model.layers.2.mlp.up_proj.weight
+model.layers.2.mlp.down_proj.weight
+model.layers.2.input_layernorm.weight
+model.layers.2.post_attention_layernorm.weight
+model.layers.3.self_attn.q_proj.weight
+model.layers.3.self_attn.k_proj.weight
+model.layers.3.self_attn.v_proj.weight
+model.layers.3.self_attn.o_proj.weight
+model.layers.3.mlp.gate_proj.weight
+model.layers.3.mlp.up_proj.weight
+model.layers.3.mlp.down_proj.weight
+model.layers.3.input_layernorm.weight
+model.layers.3.post_attention_layernorm.weight
+model.layers.4.self_attn.q_proj.weight
+model.layers.4.self_attn.k_proj.weight
+model.layers.4.self_attn.v_proj.weight
+model.layers.4.self_attn.o_proj.weight
+model.layers.4.mlp.gate_proj.weight
+model.layers.4.mlp.up_proj.weight
+model.layers.4.mlp.down_proj.weight
+model.layers.4.input_layernorm.weight
+model.layers.4.post_attention_layernorm.weight
+model.layers.5.self_attn.q_proj.weight
+model.layers.5.self_attn.k_proj.weight
+model.layers.5.self_attn.v_proj.weight
+model.layers.5.self_attn.o_proj.weight
+model.layers.5.mlp.gate_proj.weight
+model.layers.5.mlp.up_proj.weight
+model.layers.5.mlp.down_proj.weight
+model.layers.5.input_layernorm.weight
+model.layers.5.post_attention_layernorm.weight
+model.layers.6.self_attn.q_proj.weight
+model.layers.6.self_attn.k_proj.weight
+model.layers.6.self_attn.v_proj.weight
+model.layers.6.self_attn.o_proj.weight
+model.layers.6.mlp.gate_proj.weight
+model.layers.6.mlp.up_proj.weight
+model.layers.6.mlp.down_proj.weight
+model.layers.6.input_layernorm.weight
+model.layers.6.post_attention_layernorm.weight
+model.layers.7.self_attn.q_proj.weight
+model.layers.7.self_attn.k_proj.weight
+model.layers.7.self_attn.v_proj.weight
+model.layers.7.self_attn.o_proj.weight
+model.layers.7.mlp.gate_proj.weight
+model.layers.7.mlp.up_proj.weight
+model.layers.7.mlp.down_proj.weight
+model.layers.7.input_layernorm.weight
+model.layers.7.post_attention_layernorm.weight
+model.layers.8.self_attn.q_proj.weight
+model.layers.8.self_attn.k_proj.weight
+model.layers.8.self_attn.v_proj.weight
+model.layers.8.self_attn.o_proj.weight
+model.layers.8.mlp.gate_proj.weight
+model.layers.8.mlp.up_proj.weight
+model.layers.8.mlp.down_proj.weight
+model.layers.8.input_layernorm.weight
+model.layers.8.post_attention_layernorm.weight
+model.layers.9.self_attn.q_proj.weight
+model.layers.9.self_attn.k_proj.weight
+model.layers.9.self_attn.v_proj.weight
+model.layers.9.self_attn.o_proj.weight
+model.layers.9.mlp.gate_proj.weight
+model.layers.9.mlp.up_proj.weight
+model.layers.9.mlp.down_proj.weight
+model.layers.9.input_layernorm.weight
+model.layers.9.post_attention_layernorm.weight
+model.layers.10.self_attn.q_proj.weight
+model.layers.10.self_attn.k_proj.weight
+model.layers.10.self_attn.v_proj.weight
+model.layers.10.self_attn.o_proj.weight
+model.layers.10.mlp.gate_proj.weight
+model.layers.10.mlp.up_proj.weight
+model.layers.10.mlp.down_proj.weight
+model.layers.10.input_layernorm.weight
+model.layers.10.post_attention_layernorm.weight
+model.layers.11.self_attn.q_proj.weight
+model.layers.11.self_attn.k_proj.weight
+model.layers.11.self_attn.v_proj.weight
+model.layers.11.self_attn.o_proj.weight
+model.layers.11.mlp.gate_proj.weight
+model.layers.11.mlp.up_proj.weight
+model.layers.11.mlp.down_proj.weight
+model.layers.11.input_layernorm.weight
+model.layers.11.post_attention_layernorm.weight
+model.layers.12.self_attn.q_proj.weight
+model.layers.12.self_attn.k_proj.weight
+model.layers.12.self_attn.v_proj.weight
+model.layers.12.self_attn.o_proj.weight
+model.layers.12.mlp.gate_proj.weight
+model.layers.12.mlp.up_proj.weight
+model.layers.12.mlp.down_proj.weight
+model.layers.12.input_layernorm.weight
+model.layers.12.post_attention_layernorm.weight
+model.layers.13.self_attn.q_proj.weight
+model.layers.13.self_attn.k_proj.weight
+model.layers.13.self_attn.v_proj.weight
+model.layers.13.self_attn.o_proj.weight
+model.layers.13.mlp.gate_proj.weight
+model.layers.13.mlp.up_proj.weight
+model.layers.13.mlp.down_proj.weight
+model.layers.13.input_layernorm.weight
+model.layers.13.post_attention_layernorm.weight
+model.layers.14.self_attn.q_proj.weight
+model.layers.14.self_attn.k_proj.weight
+model.layers.14.self_attn.v_proj.weight
+model.layers.14.self_attn.o_proj.weight
+model.layers.14.mlp.gate_proj.weight
+model.layers.14.mlp.up_proj.weight
+model.layers.14.mlp.down_proj.weight
+model.layers.14.input_layernorm.weight
+model.layers.14.post_attention_layernorm.weight
+model.layers.15.self_attn.q_proj.weight
+model.layers.15.self_attn.k_proj.weight
+model.layers.15.self_attn.v_proj.weight
+model.layers.15.self_attn.o_proj.weight
+model.layers.15.mlp.gate_proj.weight
+model.layers.15.mlp.up_proj.weight
+model.layers.15.mlp.down_proj.weight
+model.layers.15.input_layernorm.weight
+model.layers.15.post_attention_layernorm.weight
+model.layers.16.self_attn.q_proj.weight
+model.layers.16.self_attn.k_proj.weight
+model.layers.16.self_attn.v_proj.weight
+model.layers.16.self_attn.o_proj.weight
+model.layers.16.mlp.gate_proj.weight
+model.layers.16.mlp.up_proj.weight
+model.layers.16.mlp.down_proj.weight
+model.layers.16.input_layernorm.weight
+model.layers.16.post_attention_layernorm.weight
+model.layers.17.self_attn.q_proj.weight
+model.layers.17.self_attn.k_proj.weight
+model.layers.17.self_attn.v_proj.weight
+model.layers.17.self_attn.o_proj.weight
+model.layers.17.mlp.gate_proj.weight
+model.layers.17.mlp.up_proj.weight
+model.layers.17.mlp.down_proj.weight
+model.layers.17.input_layernorm.weight
+model.layers.17.post_attention_layernorm.weight
+model.layers.18.self_attn.q_proj.weight
+model.layers.18.self_attn.k_proj.weight
+model.layers.18.self_attn.v_proj.weight
+model.layers.18.self_attn.o_proj.weight
+model.layers.18.mlp.gate_proj.weight
+model.layers.18.mlp.up_proj.weight
+model.layers.18.mlp.down_proj.weight
+model.layers.18.input_layernorm.weight
+model.layers.18.post_attention_layernorm.weight
+model.layers.19.self_attn.q_proj.weight
+model.layers.19.self_attn.k_proj.weight
+model.layers.19.self_attn.v_proj.weight
+model.layers.19.self_attn.o_proj.weight
+model.layers.19.mlp.gate_proj.weight
+model.layers.19.mlp.up_proj.weight
+model.layers.19.mlp.down_proj.weight
+model.layers.19.input_layernorm.weight
+model.layers.19.post_attention_layernorm.weight
+model.layers.20.self_attn.q_proj.weight
+model.layers.20.self_attn.k_proj.weight
+model.layers.20.self_attn.v_proj.weight
+model.layers.20.self_attn.o_proj.weight
+model.layers.20.mlp.gate_proj.weight
+model.layers.20.mlp.up_proj.weight
+model.layers.20.mlp.down_proj.weight
+model.layers.20.input_layernorm.weight
+model.layers.20.post_attention_layernorm.weight
+model.layers.21.self_attn.q_proj.weight
+model.layers.21.self_attn.k_proj.weight
+model.layers.21.self_attn.v_proj.weight
+model.layers.21.self_attn.o_proj.weight
+model.layers.21.mlp.gate_proj.weight
+model.layers.21.mlp.up_proj.weight
+model.layers.21.mlp.down_proj.weight
+model.layers.21.input_layernorm.weight
+model.layers.21.post_attention_layernorm.weight
+model.layers.22.self_attn.q_proj.weight
+model.layers.22.self_attn.k_proj.weight
+model.layers.22.self_attn.v_proj.weight
+model.layers.22.self_attn.o_proj.weight
+model.layers.22.mlp.gate_proj.weight
+model.layers.22.mlp.up_proj.weight
+model.layers.22.mlp.down_proj.weight
+model.layers.22.input_layernorm.weight
+model.layers.22.post_attention_layernorm.weight
+model.layers.23.self_attn.q_proj.weight
+model.layers.23.self_attn.k_proj.weight
+model.layers.23.self_attn.v_proj.weight
+model.layers.23.self_attn.o_proj.weight
+model.layers.23.mlp.gate_proj.weight
+model.layers.23.mlp.up_proj.weight
+model.layers.23.mlp.down_proj.weight
+model.layers.23.input_layernorm.weight
+model.layers.23.post_attention_layernorm.weight
+model.layers.24.self_attn.q_proj.weight
+model.layers.24.self_attn.k_proj.weight
+model.layers.24.self_attn.v_proj.weight
+model.layers.24.self_attn.o_proj.weight
+model.layers.24.mlp.gate_proj.weight
+model.layers.24.mlp.up_proj.weight
+model.layers.24.mlp.down_proj.weight
+model.layers.24.input_layernorm.weight
+model.layers.24.post_attention_layernorm.weight
+model.layers.25.self_attn.q_proj.weight
+model.layers.25.self_attn.k_proj.weight
+model.layers.25.self_attn.v_proj.weight
+model.layers.25.self_attn.o_proj.weight
+model.layers.25.mlp.gate_proj.weight
+model.layers.25.mlp.up_proj.weight
+model.layers.25.mlp.down_proj.weight
+model.layers.25.input_layernorm.weight
+model.layers.25.post_attention_layernorm.weight
+model.layers.26.self_attn.q_proj.weight
+model.layers.26.self_attn.k_proj.weight
+model.layers.26.self_attn.v_proj.weight
+model.layers.26.self_attn.o_proj.weight
+model.layers.26.mlp.gate_proj.weight
+model.layers.26.mlp.up_proj.weight
+model.layers.26.mlp.down_proj.weight
+model.layers.26.input_layernorm.weight
+model.layers.26.post_attention_layernorm.weight
+model.layers.27.self_attn.q_proj.weight
+model.layers.27.self_attn.k_proj.weight
+model.layers.27.self_attn.v_proj.weight
+model.layers.27.self_attn.o_proj.weight
+model.layers.27.mlp.gate_proj.weight
+model.layers.27.mlp.up_proj.weight
+model.layers.27.mlp.down_proj.weight
+model.layers.27.input_layernorm.weight
+model.layers.27.post_attention_layernorm.weight
+model.layers.28.self_attn.q_proj.weight
+model.layers.28.self_attn.k_proj.weight
+model.layers.28.self_attn.v_proj.weight
+model.layers.28.self_attn.o_proj.weight
+model.layers.28.mlp.gate_proj.weight
+model.layers.28.mlp.up_proj.weight
+model.layers.28.mlp.down_proj.weight
+model.layers.28.input_layernorm.weight
+model.layers.28.post_attention_layernorm.weight
+model.layers.29.self_attn.q_proj.weight
+model.layers.29.self_attn.k_proj.weight
+model.layers.29.self_attn.v_proj.weight
+model.layers.29.self_attn.o_proj.weight
+model.layers.29.mlp.gate_proj.weight
+model.layers.29.mlp.up_proj.weight
+model.layers.29.mlp.down_proj.weight
+model.layers.29.input_layernorm.weight
+model.layers.29.post_attention_layernorm.weight
+model.layers.30.self_attn.q_proj.weight
+model.layers.30.self_attn.k_proj.weight
+model.layers.30.self_attn.v_proj.weight
+model.layers.30.self_attn.o_proj.weight
+model.layers.30.mlp.gate_proj.weight
+model.layers.30.mlp.up_proj.weight
+model.layers.30.mlp.down_proj.weight
+model.layers.30.input_layernorm.weight
+model.layers.30.post_attention_layernorm.weight
+model.layers.31.self_attn.q_proj.weight
+model.layers.31.self_attn.k_proj.weight
+model.layers.31.self_attn.v_proj.weight
+model.layers.31.self_attn.o_proj.weight
+model.layers.31.mlp.gate_proj.weight
+model.layers.31.mlp.up_proj.weight
+model.layers.31.mlp.down_proj.weight
+model.layers.31.input_layernorm.weight
+model.layers.31.post_attention_layernorm.weight
+model.norm.weight
+lm_head.weight
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14960bc1eb30>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 516680e0-8a2b-465a-9785-3d6418ef9fd7)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+    self._prepare_proxy(conn)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x14960bc1eb30>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14960bc1eb30>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14960bc1eb30>: Failed to establish a new connection: [Errno 111] Connection refused')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    model.get_model().initialize_vision_modules(
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+    vision_tower = build_vision_tower(model_args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+    self.load_model()
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    metadata = get_hf_file_metadata(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+    r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+    response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+    return super().send(request, *args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+    raise ProxyError(e, request=request)
+requests.exceptions.ProxyError: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14960bc1eb30>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 516680e0-8a2b-465a-9785-3d6418ef9fd7)')
+Loading checkpoint shards: 100%|██████████| 2/2 [00:48<00:00, 22.81s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:48<00:00, 24.49s/it]
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14c34586ab30>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 516759cb-59c8-4544-aea3-6645e1a67f50)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+    self._prepare_proxy(conn)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x14c34586ab30>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14c34586ab30>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14c34586ab30>: Failed to establish a new connection: [Errno 111] Connection refused')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    model.get_model().initialize_vision_modules(
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+    vision_tower = build_vision_tower(model_args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+    self.load_model()
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    metadata = get_hf_file_metadata(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+    r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+    response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+    return super().send(request, *args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+    raise ProxyError(e, request=request)
+requests.exceptions.ProxyError: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14c34586ab30>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 516759cb-59c8-4544-aea3-6645e1a67f50)')
+ERROR:torch.distributed.elastic.multiprocessing.api:failed (exitcode: 1) local_rank: 0 (pid: 26820) of binary: /remote-home/syjiang/anaconda3/envs/llava/bin/python
+INFO:torch.distributed.elastic.agent.server.api:Local worker group finished (FAILED). Waiting 300 seconds for other agents to finish
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:51<00:51, 51.87s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:52<00:52, 52.79s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:54<00:54, 54.82s/it]Loading checkpoint shards:  50%|█████     | 1/2 [00:55<00:55, 55.15s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 30.86s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 34.15s/it]
+Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 31.25s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 34.35s/it]
+model.embed_tokens.weight
+model.layers.0.self_attn.q_proj.weight
+model.layers.0.self_attn.k_proj.weight
+model.layers.0.self_attn.v_proj.weight
+model.layers.0.self_attn.o_proj.weight
+model.layers.0.mlp.gate_proj.weight
+model.layers.0.mlp.up_proj.weight
+model.layers.0.mlp.down_proj.weight
+model.layers.0.input_layernorm.weight
+model.layers.0.post_attention_layernorm.weight
+model.layers.1.self_attn.q_proj.weight
+model.layers.1.self_attn.k_proj.weight
+model.layers.1.self_attn.v_proj.weight
+model.layers.1.self_attn.o_proj.weight
+model.layers.1.mlp.gate_proj.weight
+model.layers.1.mlp.up_proj.weight
+model.layers.1.mlp.down_proj.weight
+model.layers.1.input_layernorm.weight
+model.layers.1.post_attention_layernorm.weight
+model.layers.2.self_attn.q_proj.weight
+model.layers.2.self_attn.k_proj.weight
+model.layers.2.self_attn.v_proj.weight
+model.layers.2.self_attn.o_proj.weight
+model.layers.2.mlp.gate_proj.weight
+model.layers.2.mlp.up_proj.weight
+model.layers.2.mlp.down_proj.weight
+model.layers.2.input_layernorm.weight
+model.layers.2.post_attention_layernorm.weight
+model.layers.3.self_attn.q_proj.weight
+model.layers.3.self_attn.k_proj.weight
+model.layers.3.self_attn.v_proj.weight
+model.layers.3.self_attn.o_proj.weight
+model.layers.3.mlp.gate_proj.weight
+model.layers.3.mlp.up_proj.weight
+model.layers.3.mlp.down_proj.weight
+model.layers.3.input_layernorm.weight
+model.layers.3.post_attention_layernorm.weight
+model.layers.4.self_attn.q_proj.weight
+model.layers.4.self_attn.k_proj.weight
+model.layers.4.self_attn.v_proj.weight
+model.layers.4.self_attn.o_proj.weight
+model.layers.4.mlp.gate_proj.weight
+model.layers.4.mlp.up_proj.weight
+model.layers.4.mlp.down_proj.weight
+model.layers.4.input_layernorm.weight
+model.layers.4.post_attention_layernorm.weight
+model.layers.5.self_attn.q_proj.weight
+model.layers.5.self_attn.k_proj.weight
+model.layers.5.self_attn.v_proj.weight
+model.layers.5.self_attn.o_proj.weight
+model.layers.5.mlp.gate_proj.weight
+model.layers.5.mlp.up_proj.weight
+model.layers.5.mlp.down_proj.weight
+model.layers.5.input_layernorm.weight
+model.layers.5.post_attention_layernorm.weight
+model.layers.6.self_attn.q_proj.weight
+model.layers.6.self_attn.k_proj.weight
+model.layers.6.self_attn.v_proj.weight
+model.layers.6.self_attn.o_proj.weight
+model.layers.6.mlp.gate_proj.weight
+model.layers.6.mlp.up_proj.weight
+model.layers.6.mlp.down_proj.weight
+model.layers.6.input_layernorm.weight
+model.layers.6.post_attention_layernorm.weight
+model.layers.7.self_attn.q_proj.weight
+model.layers.7.self_attn.k_proj.weight
+model.layers.7.self_attn.v_proj.weight
+model.layers.7.self_attn.o_proj.weight
+model.layers.7.mlp.gate_proj.weight
+model.layers.7.mlp.up_proj.weight
+model.layers.7.mlp.down_proj.weight
+model.layers.7.input_layernorm.weight
+model.layers.7.post_attention_layernorm.weight
+model.layers.8.self_attn.q_proj.weight
+model.layers.8.self_attn.k_proj.weight
+model.layers.8.self_attn.v_proj.weight
+model.layers.8.self_attn.o_proj.weight
+model.layers.8.mlp.gate_proj.weight
+model.layers.8.mlp.up_proj.weight
+model.layers.8.mlp.down_proj.weight
+model.layers.8.input_layernorm.weight
+model.layers.8.post_attention_layernorm.weight
+model.layers.9.self_attn.q_proj.weight
+model.layers.9.self_attn.k_proj.weight
+model.layers.9.self_attn.v_proj.weight
+model.layers.9.self_attn.o_proj.weight
+model.layers.9.mlp.gate_proj.weight
+model.layers.9.mlp.up_proj.weight
+model.layers.9.mlp.down_proj.weight
+model.layers.9.input_layernorm.weight
+model.layers.9.post_attention_layernorm.weight
+model.layers.10.self_attn.q_proj.weight
+model.layers.10.self_attn.k_proj.weight
+model.layers.10.self_attn.v_proj.weight
+model.layers.10.self_attn.o_proj.weight
+model.layers.10.mlp.gate_proj.weight
+model.layers.10.mlp.up_proj.weight
+model.layers.10.mlp.down_proj.weight
+model.layers.10.input_layernorm.weight
+model.layers.10.post_attention_layernorm.weight
+model.layers.11.self_attn.q_proj.weight
+model.layers.11.self_attn.k_proj.weight
+model.layers.11.self_attn.v_proj.weight
+model.layers.11.self_attn.o_proj.weight
+model.layers.11.mlp.gate_proj.weight
+model.layers.11.mlp.up_proj.weight
+model.layers.11.mlp.down_proj.weight
+model.layers.11.input_layernorm.weight
+model.layers.11.post_attention_layernorm.weight
+model.layers.12.self_attn.q_proj.weight
+model.layers.12.self_attn.k_proj.weight
+model.layers.12.self_attn.v_proj.weight
+model.layers.12.self_attn.o_proj.weight
+model.layers.12.mlp.gate_proj.weight
+model.layers.12.mlp.up_proj.weight
+model.layers.12.mlp.down_proj.weight
+model.layers.12.input_layernorm.weight
+model.layers.12.post_attention_layernorm.weight
+model.layers.13.self_attn.q_proj.weight
+model.layers.13.self_attn.k_proj.weight
+model.layers.13.self_attn.v_proj.weight
+model.layers.13.self_attn.o_proj.weight
+model.layers.13.mlp.gate_proj.weight
+model.layers.13.mlp.up_proj.weight
+model.layers.13.mlp.down_proj.weight
+model.layers.13.input_layernorm.weight
+model.layers.13.post_attention_layernorm.weight
+model.layers.14.self_attn.q_proj.weight
+model.layers.14.self_attn.k_proj.weight
+model.layers.14.self_attn.v_proj.weight
+model.layers.14.self_attn.o_proj.weight
+model.layers.14.mlp.gate_proj.weight
+model.layers.14.mlp.up_proj.weight
+model.layers.14.mlp.down_proj.weight
+model.layers.14.input_layernorm.weight
+model.layers.14.post_attention_layernorm.weight
+model.layers.15.self_attn.q_proj.weight
+model.layers.15.self_attn.k_proj.weight
+model.layers.15.self_attn.v_proj.weight
+model.layers.15.self_attn.o_proj.weight
+model.layers.15.mlp.gate_proj.weight
+model.layers.15.mlp.up_proj.weight
+model.layers.15.mlp.down_proj.weight
+model.layers.15.input_layernorm.weight
+model.layers.15.post_attention_layernorm.weight
+model.layers.16.self_attn.q_proj.weight
+model.layers.16.self_attn.k_proj.weight
+model.layers.16.self_attn.v_proj.weight
+model.layers.16.self_attn.o_proj.weight
+model.layers.16.mlp.gate_proj.weight
+model.layers.16.mlp.up_proj.weight
+model.layers.16.mlp.down_proj.weight
+model.layers.16.input_layernorm.weight
+model.layers.16.post_attention_layernorm.weight
+model.layers.17.self_attn.q_proj.weight
+model.layers.17.self_attn.k_proj.weight
+model.layers.17.self_attn.v_proj.weight
+model.layers.17.self_attn.o_proj.weight
+model.layers.17.mlp.gate_proj.weight
+model.layers.17.mlp.up_proj.weight
+model.layers.17.mlp.down_proj.weight
+model.layers.17.input_layernorm.weight
+model.layers.17.post_attention_layernorm.weight
+model.layers.18.self_attn.q_proj.weight
+model.layers.18.self_attn.k_proj.weight
+model.layers.18.self_attn.v_proj.weight
+model.layers.18.self_attn.o_proj.weight
+model.layers.18.mlp.gate_proj.weight
+model.layers.18.mlp.up_proj.weight
+model.layers.18.mlp.down_proj.weight
+model.layers.18.input_layernorm.weight
+model.layers.18.post_attention_layernorm.weight
+model.layers.19.self_attn.q_proj.weight
+model.layers.19.self_attn.k_proj.weight
+model.layers.19.self_attn.v_proj.weight
+model.layers.19.self_attn.o_proj.weight
+model.layers.19.mlp.gate_proj.weight
+model.layers.19.mlp.up_proj.weight
+model.layers.19.mlp.down_proj.weight
+model.layers.19.input_layernorm.weight
+model.layers.19.post_attention_layernorm.weight
+model.layers.20.self_attn.q_proj.weight
+model.layers.20.self_attn.k_proj.weight
+model.layers.20.self_attn.v_proj.weight
+model.layers.20.self_attn.o_proj.weight
+model.layers.20.mlp.gate_proj.weight
+model.layers.20.mlp.up_proj.weight
+model.layers.20.mlp.down_proj.weight
+model.layers.20.input_layernorm.weight
+model.layers.20.post_attention_layernorm.weight
+model.layers.21.self_attn.q_proj.weight
+model.layers.21.self_attn.k_proj.weight
+model.layers.21.self_attn.v_proj.weight
+model.layers.21.self_attn.o_proj.weight
+model.layers.21.mlp.gate_proj.weight
+model.layers.21.mlp.up_proj.weight
+model.layers.21.mlp.down_proj.weight
+model.layers.21.input_layernorm.weight
+model.layers.21.post_attention_layernorm.weight
+model.layers.22.self_attn.q_proj.weight
+model.layers.22.self_attn.k_proj.weight
+model.layers.22.self_attn.v_proj.weight
+model.layers.22.self_attn.o_proj.weight
+model.layers.22.mlp.gate_proj.weight
+model.layers.22.mlp.up_proj.weight
+model.layers.22.mlp.down_proj.weight
+model.layers.22.input_layernorm.weight
+model.layers.22.post_attention_layernorm.weight
+model.layers.23.self_attn.q_proj.weight
+model.layers.23.self_attn.k_proj.weight
+model.layers.23.self_attn.v_proj.weight
+model.layers.23.self_attn.o_proj.weight
+model.layers.23.mlp.gate_proj.weight
+model.layers.23.mlp.up_proj.weight
+model.layers.23.mlp.down_proj.weight
+model.layers.23.input_layernorm.weight
+model.layers.23.post_attention_layernorm.weight
+model.layers.24.self_attn.q_proj.weight
+model.layers.24.self_attn.k_proj.weight
+model.layers.24.self_attn.v_proj.weight
+model.layers.24.self_attn.o_proj.weight
+model.layers.24.mlp.gate_proj.weight
+model.layers.24.mlp.up_proj.weight
+model.layers.24.mlp.down_proj.weight
+model.layers.24.input_layernorm.weight
+model.layers.24.post_attention_layernorm.weight
+model.layers.25.self_attn.q_proj.weight
+model.layers.25.self_attn.k_proj.weight
+model.layers.25.self_attn.v_proj.weight
+model.layers.25.self_attn.o_proj.weight
+model.layers.25.mlp.gate_proj.weight
+model.layers.25.mlp.up_proj.weight
+model.layers.25.mlp.down_proj.weight
+model.layers.25.input_layernorm.weight
+model.layers.25.post_attention_layernorm.weight
+model.layers.26.self_attn.q_proj.weight
+model.layers.26.self_attn.k_proj.weight
+model.layers.26.self_attn.v_proj.weight
+model.layers.26.self_attn.o_proj.weight
+model.layers.26.mlp.gate_proj.weight
+model.layers.26.mlp.up_proj.weight
+model.layers.26.mlp.down_proj.weight
+model.layers.26.input_layernorm.weight
+model.layers.26.post_attention_layernorm.weight
+model.layers.27.self_attn.q_proj.weight
+model.layers.27.self_attn.k_proj.weight
+model.layers.27.self_attn.v_proj.weight
+model.layers.27.self_attn.o_proj.weight
+model.layers.27.mlp.gate_proj.weight
+model.layers.27.mlp.up_proj.weight
+model.layers.27.mlp.down_proj.weight
+model.layers.27.input_layernorm.weight
+model.layers.27.post_attention_layernorm.weight
+model.layers.28.self_attn.q_proj.weight
+model.layers.28.self_attn.k_proj.weight
+model.layers.28.self_attn.v_proj.weight
+model.layers.28.self_attn.o_proj.weight
+model.layers.28.mlp.gate_proj.weight
+model.layers.28.mlp.up_proj.weight
+model.layers.28.mlp.down_proj.weight
+model.layers.28.input_layernorm.weight
+model.layers.28.post_attention_layernorm.weight
+model.layers.29.self_attn.q_proj.weight
+model.layers.29.self_attn.k_proj.weight
+model.layers.29.self_attn.v_proj.weight
+model.layers.29.self_attn.o_proj.weight
+model.layers.29.mlp.gate_proj.weight
+model.layers.29.mlp.up_proj.weight
+model.layers.29.mlp.down_proj.weight
+model.layers.29.input_layernorm.weight
+model.layers.29.post_attention_layernorm.weight
+model.layers.30.self_attn.q_proj.weight
+model.layers.30.self_attn.k_proj.weight
+model.layers.30.self_attn.v_proj.weight
+model.layers.30.self_attn.o_proj.weight
+model.layers.30.mlp.gate_proj.weight
+model.layers.30.mlp.up_proj.weight
+model.layers.30.mlp.down_proj.weight
+model.layers.30.input_layernorm.weight
+model.layers.30.post_attention_layernorm.weight
+model.layers.31.self_attn.q_proj.weight
+model.layers.31.self_attn.k_proj.weight
+model.layers.31.self_attn.v_proj.weight
+model.layers.31.self_attn.o_proj.weight
+model.layers.31.mlp.gate_proj.weight
+model.layers.31.mlp.up_proj.weight
+model.layers.31.mlp.down_proj.weight
+model.layers.31.input_layernorm.weight
+model.layers.31.post_attention_layernorm.weight
+model.norm.weight
+lm_head.weight
+Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 30.60s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 34.23s/it]
+model.embed_tokens.weight
+model.layers.0.self_attn.q_proj.weight
+model.layers.0.self_attn.k_proj.weight
+model.layers.0.self_attn.v_proj.weight
+model.layers.0.self_attn.o_proj.weight
+model.layers.0.mlp.gate_proj.weight
+model.layers.0.mlp.up_proj.weight
+model.layers.0.mlp.down_proj.weight
+model.layers.0.input_layernorm.weight
+model.layers.0.post_attention_layernorm.weight
+model.layers.1.self_attn.q_proj.weight
+model.layers.1.self_attn.k_proj.weight
+model.layers.1.self_attn.v_proj.weight
+model.layers.1.self_attn.o_proj.weight
+model.layers.1.mlp.gate_proj.weight
+model.layers.1.mlp.up_proj.weight
+model.layers.1.mlp.down_proj.weight
+model.layers.1.input_layernorm.weight
+model.layers.1.post_attention_layernorm.weight
+model.layers.2.self_attn.q_proj.weight
+model.layers.2.self_attn.k_proj.weight
+model.layers.2.self_attn.v_proj.weight
+model.layers.2.self_attn.o_proj.weight
+model.layers.2.mlp.gate_proj.weight
+model.layers.2.mlp.up_proj.weight
+model.layers.2.mlp.down_proj.weight
+model.layers.2.input_layernorm.weight
+model.layers.2.post_attention_layernorm.weight
+model.layers.3.self_attn.q_proj.weight
+model.layers.3.self_attn.k_proj.weight
+model.layers.3.self_attn.v_proj.weight
+model.layers.3.self_attn.o_proj.weight
+model.layers.3.mlp.gate_proj.weight
+model.layers.3.mlp.up_proj.weight
+model.layers.3.mlp.down_proj.weight
+model.layers.3.input_layernorm.weight
+model.layers.3.post_attention_layernorm.weight
+model.layers.4.self_attn.q_proj.weight
+model.layers.4.self_attn.k_proj.weight
+model.layers.4.self_attn.v_proj.weight
+model.layers.4.self_attn.o_proj.weight
+model.layers.4.mlp.gate_proj.weight
+model.layers.4.mlp.up_proj.weight
+model.layers.4.mlp.down_proj.weight
+model.layers.4.input_layernorm.weight
+model.layers.4.post_attention_layernorm.weight
+model.layers.5.self_attn.q_proj.weight
+model.layers.5.self_attn.k_proj.weight
+model.layers.5.self_attn.v_proj.weight
+model.layers.5.self_attn.o_proj.weight
+model.layers.5.mlp.gate_proj.weight
+model.layers.5.mlp.up_proj.weight
+model.layers.5.mlp.down_proj.weight
+model.layers.5.input_layernorm.weight
+model.layers.5.post_attention_layernorm.weight
+model.layers.6.self_attn.q_proj.weight
+model.layers.6.self_attn.k_proj.weight
+model.layers.6.self_attn.v_proj.weight
+model.layers.6.self_attn.o_proj.weight
+model.layers.6.mlp.gate_proj.weight
+model.layers.6.mlp.up_proj.weight
+model.layers.6.mlp.down_proj.weight
+model.layers.6.input_layernorm.weight
+model.layers.6.post_attention_layernorm.weight
+model.layers.7.self_attn.q_proj.weight
+model.layers.7.self_attn.k_proj.weight
+model.layers.7.self_attn.v_proj.weight
+model.layers.7.self_attn.o_proj.weight
+model.layers.7.mlp.gate_proj.weight
+model.layers.7.mlp.up_proj.weight
+model.layers.7.mlp.down_proj.weight
+model.layers.7.input_layernorm.weight
+model.layers.7.post_attention_layernorm.weight
+model.layers.8.self_attn.q_proj.weight
+model.layers.8.self_attn.k_proj.weight
+model.layers.8.self_attn.v_proj.weight
+model.layers.8.self_attn.o_proj.weight
+model.layers.8.mlp.gate_proj.weight
+model.layers.8.mlp.up_proj.weight
+model.layers.8.mlp.down_proj.weight
+model.layers.8.input_layernorm.weight
+model.layers.8.post_attention_layernorm.weight
+model.layers.9.self_attn.q_proj.weight
+model.layers.9.self_attn.k_proj.weight
+model.layers.9.self_attn.v_proj.weight
+model.layers.9.self_attn.o_proj.weight
+model.layers.9.mlp.gate_proj.weight
+model.layers.9.mlp.up_proj.weight
+model.layers.9.mlp.down_proj.weight
+model.layers.9.input_layernorm.weight
+model.layers.9.post_attention_layernorm.weight
+model.layers.10.self_attn.q_proj.weight
+model.layers.10.self_attn.k_proj.weight
+model.layers.10.self_attn.v_proj.weight
+model.layers.10.self_attn.o_proj.weight
+model.layers.10.mlp.gate_proj.weight
+model.layers.10.mlp.up_proj.weight
+model.layers.10.mlp.down_proj.weight
+model.layers.10.input_layernorm.weight
+model.layers.10.post_attention_layernorm.weight
+model.layers.11.self_attn.q_proj.weight
+model.layers.11.self_attn.k_proj.weight
+model.layers.11.self_attn.v_proj.weight
+model.layers.11.self_attn.o_proj.weight
+model.layers.11.mlp.gate_proj.weight
+model.layers.11.mlp.up_proj.weight
+model.layers.11.mlp.down_proj.weight
+model.layers.11.input_layernorm.weight
+model.layers.11.post_attention_layernorm.weight
+model.layers.12.self_attn.q_proj.weight
+model.layers.12.self_attn.k_proj.weight
+model.layers.12.self_attn.v_proj.weight
+model.layers.12.self_attn.o_proj.weight
+model.layers.12.mlp.gate_proj.weight
+model.layers.12.mlp.up_proj.weight
+model.layers.12.mlp.down_proj.weight
+model.layers.12.input_layernorm.weight
+model.layers.12.post_attention_layernorm.weight
+model.layers.13.self_attn.q_proj.weight
+model.layers.13.self_attn.k_proj.weight
+model.layers.13.self_attn.v_proj.weight
+model.layers.13.self_attn.o_proj.weight
+model.layers.13.mlp.gate_proj.weight
+model.layers.13.mlp.up_proj.weight
+model.layers.13.mlp.down_proj.weight
+model.layers.13.input_layernorm.weight
+model.layers.13.post_attention_layernorm.weight
+model.layers.14.self_attn.q_proj.weight
+model.layers.14.self_attn.k_proj.weight
+model.layers.14.self_attn.v_proj.weight
+model.layers.14.self_attn.o_proj.weight
+model.layers.14.mlp.gate_proj.weight
+model.layers.14.mlp.up_proj.weight
+model.layers.14.mlp.down_proj.weight
+model.layers.14.input_layernorm.weight
+model.layers.14.post_attention_layernorm.weight
+model.layers.15.self_attn.q_proj.weight
+model.layers.15.self_attn.k_proj.weight
+model.layers.15.self_attn.v_proj.weight
+model.layers.15.self_attn.o_proj.weight
+model.layers.15.mlp.gate_proj.weight
+model.layers.15.mlp.up_proj.weight
+model.layers.15.mlp.down_proj.weight
+model.layers.15.input_layernorm.weight
+model.layers.15.post_attention_layernorm.weight
+model.layers.16.self_attn.q_proj.weight
+model.layers.16.self_attn.k_proj.weight
+model.layers.16.self_attn.v_proj.weight
+model.layers.16.self_attn.o_proj.weight
+model.layers.16.mlp.gate_proj.weight
+model.layers.16.mlp.up_proj.weight
+model.layers.16.mlp.down_proj.weight
+model.layers.16.input_layernorm.weight
+model.layers.16.post_attention_layernorm.weight
+model.layers.17.self_attn.q_proj.weight
+model.layers.17.self_attn.k_proj.weight
+model.layers.17.self_attn.v_proj.weight
+model.layers.17.self_attn.o_proj.weight
+model.layers.17.mlp.gate_proj.weight
+model.layers.17.mlp.up_proj.weight
+model.layers.17.mlp.down_proj.weight
+model.layers.17.input_layernorm.weight
+model.layers.17.post_attention_layernorm.weight
+model.layers.18.self_attn.q_proj.weight
+model.layers.18.self_attn.k_proj.weight
+model.layers.18.self_attn.v_proj.weight
+model.layers.18.self_attn.o_proj.weight
+model.layers.18.mlp.gate_proj.weight
+model.layers.18.mlp.up_proj.weight
+model.layers.18.mlp.down_proj.weight
+model.layers.18.input_layernorm.weight
+model.layers.18.post_attention_layernorm.weight
+model.layers.19.self_attn.q_proj.weight
+model.layers.19.self_attn.k_proj.weight
+model.layers.19.self_attn.v_proj.weight
+model.layers.19.self_attn.o_proj.weight
+model.layers.19.mlp.gate_proj.weight
+model.layers.19.mlp.up_proj.weight
+model.layers.19.mlp.down_proj.weight
+model.layers.19.input_layernorm.weight
+model.layers.19.post_attention_layernorm.weight
+model.layers.20.self_attn.q_proj.weight
+model.layers.20.self_attn.k_proj.weight
+model.layers.20.self_attn.v_proj.weight
+model.layers.20.self_attn.o_proj.weight
+model.layers.20.mlp.gate_proj.weight
+model.layers.20.mlp.up_proj.weight
+model.layers.20.mlp.down_proj.weight
+model.layers.20.input_layernorm.weight
+model.layers.20.post_attention_layernorm.weight
+model.layers.21.self_attn.q_proj.weight
+model.layers.21.self_attn.k_proj.weight
+model.layers.21.self_attn.v_proj.weight
+model.layers.21.self_attn.o_proj.weight
+model.layers.21.mlp.gate_proj.weight
+model.layers.21.mlp.up_proj.weight
+model.layers.21.mlp.down_proj.weight
+model.layers.21.input_layernorm.weight
+model.layers.21.post_attention_layernorm.weight
+model.layers.22.self_attn.q_proj.weight
+model.layers.22.self_attn.k_proj.weight
+model.layers.22.self_attn.v_proj.weight
+model.layers.22.self_attn.o_proj.weight
+model.layers.22.mlp.gate_proj.weight
+model.layers.22.mlp.up_proj.weight
+model.layers.22.mlp.down_proj.weight
+model.layers.22.input_layernorm.weight
+model.layers.22.post_attention_layernorm.weight
+model.layers.23.self_attn.q_proj.weight
+model.layers.23.self_attn.k_proj.weight
+model.layers.23.self_attn.v_proj.weight
+model.layers.23.self_attn.o_proj.weight
+model.layers.23.mlp.gate_proj.weight
+model.layers.23.mlp.up_proj.weight
+model.layers.23.mlp.down_proj.weight
+model.layers.23.input_layernorm.weight
+model.layers.23.post_attention_layernorm.weight
+model.layers.24.self_attn.q_proj.weight
+model.layers.24.self_attn.k_proj.weight
+model.layers.24.self_attn.v_proj.weight
+model.layers.24.self_attn.o_proj.weight
+model.layers.24.mlp.gate_proj.weight
+model.layers.24.mlp.up_proj.weight
+model.layers.24.mlp.down_proj.weight
+model.layers.24.input_layernorm.weight
+model.layers.24.post_attention_layernorm.weight
+model.layers.25.self_attn.q_proj.weight
+model.layers.25.self_attn.k_proj.weight
+model.layers.25.self_attn.v_proj.weight
+model.layers.25.self_attn.o_proj.weight
+model.layers.25.mlp.gate_proj.weight
+model.layers.25.mlp.up_proj.weight
+model.layers.25.mlp.down_proj.weight
+model.layers.25.input_layernorm.weight
+model.layers.25.post_attention_layernorm.weight
+model.layers.26.self_attn.q_proj.weight
+model.layers.26.self_attn.k_proj.weight
+model.layers.26.self_attn.v_proj.weight
+model.layers.26.self_attn.o_proj.weight
+model.layers.26.mlp.gate_proj.weight
+model.layers.26.mlp.up_proj.weight
+model.layers.26.mlp.down_proj.weight
+model.layers.26.input_layernorm.weight
+model.layers.26.post_attention_layernorm.weight
+model.layers.27.self_attn.q_proj.weight
+model.layers.27.self_attn.k_proj.weight
+model.layers.27.self_attn.v_proj.weight
+model.layers.27.self_attn.o_proj.weight
+model.layers.27.mlp.gate_proj.weight
+model.layers.27.mlp.up_proj.weight
+model.layers.27.mlp.down_proj.weight
+model.layers.27.input_layernorm.weight
+model.layers.27.post_attention_layernorm.weight
+model.layers.28.self_attn.q_proj.weight
+model.layers.28.self_attn.k_proj.weight
+model.layers.28.self_attn.v_proj.weight
+model.layers.28.self_attn.o_proj.weight
+model.layers.28.mlp.gate_proj.weight
+model.layers.28.mlp.up_proj.weight
+model.layers.28.mlp.down_proj.weight
+model.layers.28.input_layernorm.weight
+model.layers.28.post_attention_layernorm.weight
+model.layers.29.self_attn.q_proj.weight
+model.layers.29.self_attn.k_proj.weight
+model.layers.29.self_attn.v_proj.weight
+model.layers.29.self_attn.o_proj.weight
+model.layers.29.mlp.gate_proj.weight
+model.layers.29.mlp.up_proj.weight
+model.layers.29.mlp.down_proj.weight
+model.layers.29.input_layernorm.weight
+model.layers.29.post_attention_layernorm.weight
+model.layers.30.self_attn.q_proj.weight
+model.layers.30.self_attn.k_proj.weight
+model.layers.30.self_attn.v_proj.weight
+model.layers.30.self_attn.o_proj.weight
+model.layers.30.mlp.gate_proj.weight
+model.layers.30.mlp.up_proj.weight
+model.layers.30.mlp.down_proj.weight
+model.layers.30.input_layernorm.weight
+model.layers.30.post_attention_layernorm.weight
+model.layers.31.self_attn.q_proj.weight
+model.layers.31.self_attn.k_proj.weight
+model.layers.31.self_attn.v_proj.weight
+model.layers.31.self_attn.o_proj.weight
+model.layers.31.mlp.gate_proj.weight
+model.layers.31.mlp.up_proj.weight
+model.layers.31.mlp.down_proj.weight
+model.layers.31.input_layernorm.weight
+model.layers.31.post_attention_layernorm.weight
+model.norm.weight
+lm_head.weight
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x148d2def2b00>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 91f1d7d5-d872-41d6-817c-f0775a2bf45a)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14e937676c80>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 74815fe7-8248-4c6f-8140-91e1fb639300)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x15301c3aab90>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 393cebf7-1636-4340-b7d8-06b97223ac42)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+        sock.connect(sa)sock.connect(sa)
+
+    ConnectionRefusedErrorsock.connect(sa)ConnectionRefusedError
+: [Errno 111] Connection refused: 
+[Errno 111] Connection refused
+The above exception was the direct cause of the following exception:
+
+
+
+The above exception was the direct cause of the following exception:
+
+ConnectionRefusedErrorTraceback (most recent call last):
+Traceback (most recent call last):
+:   File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+[Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+    self._prepare_proxy(conn)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    self._prepare_proxy(conn)
+    self._prepare_proxy(conn)  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    conn.connect()    
+conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    self.sock = sock = self._new_conn()
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x15301c3aab90>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions    .raise NewConnectionError(ProxyError
+    raise NewConnectionError(
+urllib3.exceptions: .urllib3.exceptions('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x15301c3aab90>: Failed to establish a new connection: [Errno 111] Connection refused'))NewConnectionError.
+: 
+The above exception was the direct cause of the following exception:
+
+NewConnectionError<urllib3.connection.HTTPSConnection object at 0x14e937676c80>: Failed to establish a new connection: [Errno 111] Connection refusedTraceback (most recent call last):
+
+: 
+The above exception was the direct cause of the following exception:
+
+<urllib3.connection.HTTPSConnection object at 0x148d2def2b00>: Failed to establish a new connection: [Errno 111] Connection refused  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+
+urllib3.exceptions
+The above exception was the direct cause of the following exception:
+
+.ProxyErrorurllib3.exceptions.ProxyError: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14e937676c80>: Failed to establish a new connection: [Errno 111] Connection refused'))
+: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x148d2def2b00>: Failed to establish a new connection: [Errno 111] Connection refused'))
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]    
+raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]urllib3.exceptions
+.MaxRetryErrorurllib3.exceptions: .HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x15301c3aab90>: Failed to establish a new connection: [Errno 111] Connection refused')))MaxRetryError    
+: raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+urllib3.exceptionsHTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14e937676c80>: Failed to establish a new connection: [Errno 111] Connection refused'))).
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+MaxRetryError
+During handling of the above exception, another exception occurred:
+
+: Traceback (most recent call last):
+HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x148d2def2b00>: Failed to establish a new connection: [Errno 111] Connection refused')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    train()
+      File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    model.get_model().initialize_vision_modules(
+      File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+model.get_model().initialize_vision_modules(
+      File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+model.get_model().initialize_vision_modules(
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+        vision_tower = build_vision_tower(model_args)vision_tower = build_vision_tower(model_args)
+
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+    vision_tower = build_vision_tower(model_args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+        return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+
+    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+    self.load_model()    
+    self.load_model()self.load_model()  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+
+
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 30.60s/it]Loading checkpoint shards: 100%|██████████| 2/2 [01:08<00:00, 34.29s/it]
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+        image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1467cae02c80>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 1ec1ca91-a3dc-4967-b4d8-bf06cf716140)')' thrown while requesting HEAD https://huggingface.co/openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 203, in _new_conn
+    sock = connection.create_connection(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 776, in urlopen
+    self._prepare_proxy(conn)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 1041, in _prepare_proxy
+    conn.connect()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 611, in connect
+    self.sock = sock = self._new_conn()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connection.py", line 218, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPSConnection object at 0x1467cae02c80>: Failed to establish a new connection: [Errno 111] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1467cae02c80>: Failed to establish a new connection: [Errno 111] Connection refused'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 486, in send
+    resp = conn.urlopen(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/connectionpool.py", line 844, in urlopen
+    retries = retries.increment(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/urllib3/util/retry.py", line 515, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1467cae02c80>: Failed to establish a new connection: [Errno 111] Connection refused')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train.py", line 899, in train
+    model.get_model().initialize_vision_modules(
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/llava_arch.py", line 58, in initialize_vision_modules
+    vision_tower = build_vision_tower(model_args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/builder.py", line 9, in build_vision_tower
+    return CLIPVisionTower(vision_tower, args=vision_tower_cfg, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 18, in __init__
+    self.load_model()
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/multimodal_encoder/clip_encoder.py", line 23, in load_model
+    self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 195, in from_pretrained
+    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/image_processing_utils.py", line 299, in get_image_processor_dict
+    resolved_image_processor_file = cached_file(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/utils/hub.py", line 417, in cached_file
+    resolved_file = hf_hub_download(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)    
+return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1195, in hf_hub_download
+    metadata = get_hf_file_metadata(
+    metadata = get_hf_file_metadata(    
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+metadata = get_hf_file_metadata(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    metadata = get_hf_file_metadata(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_validators.py", line 118, in _inner_fn
+    return fn(*args, **kwargs)
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+return fn(*args, **kwargs)
+    return fn(*args, **kwargs)  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+    return fn(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 1532, in get_hf_file_metadata
+    r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    r = _request_wrapper(    
+r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    r = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 407, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    response = _request_wrapper(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/file_download.py", line 442, in _request_wrapper
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    return http_backoff(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 274, in http_backoff
+    raise err
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+    raise errraise err
+
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+raise err  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 258, in http_backoff
+    response = session.request(method=method, url=url, **kwargs)
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+    response = session.request(method=method, url=url, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 589, in request
+        resp = self.send(prep, **send_kwargs)resp = self.send(prep, **send_kwargs)
+
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    resp = self.send(prep, **send_kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    resp = self.send(prep, **send_kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+r = adapter.send(request, **kwargs)
+      File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+r = adapter.send(request, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+    r = adapter.send(request, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/huggingface_hub/utils/_http.py", line 63, in send
+    return super().send(request, *args, **kwargs)
+    return super().send(request, *args, **kwargs)  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+
+    return super().send(request, *args, **kwargs)  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+    return super().send(request, *args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/requests/adapters.py", line 513, in send
+    raise ProxyError(e, request=request)
+    raise ProxyError(e, request=request)
+requests.exceptions.    requests.exceptionsProxyErrorraise ProxyError(e, request=request)    .
+raise ProxyError(e, request=request)ProxyError
+requests.exceptions.ProxyErrorrequests.exceptions: .(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x14e937676c80>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 74815fe7-8248-4c6f-8140-91e1fb639300)')ProxyError
+: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x15301c3aab90>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 393cebf7-1636-4340-b7d8-06b97223ac42)'): 
+(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1467cae02c80>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 1ec1ca91-a3dc-4967-b4d8-bf06cf716140)')
+: (MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /openai/clip-vit-large-patch14-336/resolve/main/preprocessor_config.json (Caused by ProxyError('Unable to connect to proxy', NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x148d2def2b00>: Failed to establish a new connection: [Errno 111] Connection refused')))"), '(Request ID: 91f1d7d5-d872-41d6-817c-f0775a2bf45a)')
+ERROR:torch.distributed.elastic.multiprocessing.api:failed (exitcode: 1) local_rank: 0 (pid: 12951) of binary: /remote-home/syjiang/anaconda3/envs/llava/bin/python
+INFO:torch.distributed.elastic.agent.server.api:Local worker group finished (FAILED). Waiting 300 seconds for other agents to finish
+INFO:torch.distributed.elastic.agent.server.api:Done waiting for other agents. Elapsed: 0.0014760494232177734 seconds
+INFO:torch.distributed.elastic.agent.server.api:Done waiting for other agents. Elapsed: 40.03490877151489 seconds
+INFO:torch.distributed.elastic.multiprocessing.errors:local_rank 0 FAILED with no error file. Decorate your entrypoint fn with @record for traceback info. See: https://pytorch.org/docs/stable/elastic/errors.html
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 798, in <module>
+    main()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 346, in wrapper
+    return f(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 794, in main
+    run(args)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 785, in run
+    elastic_launch(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 134, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 250, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+llava/train/train_mem.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2023-11-24_16:39:43
+  host      : x090-5
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 12952)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2023-11-24_16:39:43
+  host      : x090-5
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 12953)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2023-11-24_16:39:43
+  host      : x090-5
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 12954)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2023-11-24_16:39:43
+  host      : x090-5
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 12951)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+INFO:torch.distributed.elastic.multiprocessing.errors:local_rank 4 FAILED with no error file. Decorate your entrypoint fn with @record for traceback info. See: https://pytorch.org/docs/stable/elastic/errors.html
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 798, in <module>
+    main()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 346, in wrapper
+    return f(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 794, in main
+    run(args)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 785, in run
+    elastic_launch(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 134, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 250, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+llava/train/train_mem.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2023-11-24_16:39:03
+  host      : x090-8
+  rank      : 5 (local_rank: 1)
+  exitcode  : 1 (pid: 26821)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2023-11-24_16:39:03
+  host      : x090-8
+  rank      : 6 (local_rank: 2)
+  exitcode  : 1 (pid: 26822)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[3]:
+  time      : 2023-11-24_16:39:03
+  host      : x090-8
+  rank      : 7 (local_rank: 3)
+  exitcode  : 1 (pid: 26823)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2023-11-24_16:39:03
+  host      : x090-8
+  rank      : 4 (local_rank: 0)
+  exitcode  : 1 (pid: 26820)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+srun: error: x090-8: task 1: Exited with exit code 1
+srun: error: x090-5: task 0: Exited with exit code 1

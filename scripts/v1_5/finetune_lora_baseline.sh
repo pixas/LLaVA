@@ -1,6 +1,37 @@
 #!/bin/bash
 
-deepspeed  llava/train/train_mem.py \
+#SBATCH -J FT-baseline-llava7b
+#SBATCH --partition=x090
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:4  
+#SBATCH --cpus-per-task=8
+#SBATCH --ntasks-per-node=1    
+#SBATCH --mem-per-cpu=4G  
+#SBATCH --output=logs/llava7b_baseline.out
+###SBATCH --kill-on-bad-exit=1
+
+nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
+nodes_array=($nodes)
+head_node=${nodes_array[0]}
+head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
+
+GPUS_PER_NODE=4
+NNODES=$SLURM_NNODES
+
+echo Node IP: $head_node_ip nodes_array: $nodes_array
+srun bash -c 'echo $SLURMD_NODENAME-$SLURM_JOB_GPUS' # 打印出不同机器上分配的显卡编号
+
+export LOGLEVEL=INFO
+export NCCL_DEBUG=ERROR
+export NCCL_SOCKET_IFNAME="eth0"
+export MASTER_PORT=29550
+
+srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
+    --nproc_per_node $GPUS_PER_NODE \
+    --nnodes $NNODES \
+    --rdzv_id 29550 --rdzv_backend c10d --rdzv_endpoint $head_node_ip:29550 \
+    --node_rank $SLURM_PROCID \
+    llava/train/train_mem.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero3.json \
     --model_name_or_path /remote-home/share/models/vicuna-7b-v1.5 \

@@ -22,6 +22,7 @@ from .multimodal_encoder.builder import build_vision_tower
 from .multimodal_projector.builder import build_vision_projector
 
 from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
+from llava.model.multimodal_projector.builder import Qformer
 
 
 class LlavaMetaModel:
@@ -39,12 +40,18 @@ class LlavaMetaModel:
             vision_tower = vision_tower[0]
         return vision_tower
 
+    def get_tokenizer(self, tokenizer):
+        self.tokenizer = tokenizer
+        
     def initialize_vision_modules(self, model_args, fsdp=None):
         vision_tower = model_args.vision_tower
         mm_vision_select_layer = model_args.mm_vision_select_layer
         mm_vision_select_feature = model_args.mm_vision_select_feature
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
-
+        mm_projector_gates = model_args.mm_projector_gates
+        mm_projector_experts = model_args.mm_projector_experts
+        qformer_text_input = model_args.qformer_text_input
+        qformer_use_pretrained = model_args.qformer_use_pretrained
         self.config.mm_vision_tower = vision_tower
 
         if self.get_vision_tower() is None:
@@ -66,7 +73,11 @@ class LlavaMetaModel:
         self.config.mm_hidden_size = vision_tower.hidden_size
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
-
+        self.config.mm_projector_gates = mm_projector_gates
+        self.config.mm_projector_experts = mm_projector_experts
+        self.config.qformer_text_input = qformer_text_input
+        self.config.qformer_use_pretrained = qformer_use_pretrained
+        
         if getattr(self, 'mm_projector', None) is None:
             self.mm_projector = build_vision_projector(self.config)
         else:
@@ -78,9 +89,7 @@ class LlavaMetaModel:
             mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
             def get_w(weights, keyword):
                 return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
-
-            self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
-
+            self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'), strict=False)
 
 class LlavaMetaForCausalLM(ABC):
 
@@ -91,29 +100,112 @@ class LlavaMetaForCausalLM(ABC):
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
 
-    def encode_images(self, images):
+    def encode_images(self, images, text=None):
         image_features = self.get_model().get_vision_tower()(images)
-        image_features = self.get_model().mm_projector(image_features)
+        # print(image_features.shape)
+        if text is None:
+            image_features = self.get_model().mm_projector(image_features)
+        else:
+            image_features = self.get_model().mm_projector(image_features, text)
         return image_features
+    
+    def detokenize(self, input_ids, tokenizer):
+        new_text = []
+        cur_image_idx = 0
+        for batch_idx, cur_input_ids in enumerate(input_ids):
+            if (cur_input_ids == IMAGE_TOKEN_INDEX).sum() == 0:
+                # multimodal LLM, but the current sample is not multimodal
+                # FIXME: this is a hacky fix, for deepspeed zero3 to work
+                text = tokenizer.decode(cur_input_ids.detach(), skip_special_tokens=True)
+                new_text.append(text)
+                continue
+            image_token_indices = torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0]
+            # cur_new_input_embeds = []
+
+            while image_token_indices.numel() > 0:
+                text = ""
+                
+                # cur_image_features = image_features[cur_image_idx]
+                image_token_start = image_token_indices[0]
+                if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
+                    text += tokenizer.decode(cur_input_ids[:image_token_start-1].detach(), skip_special_tokens=True)
+                    text += tokenizer.decode(cur_input_ids[image_token_start-1:image_token_start], skip_special_tokens=True)
+                    text += tokenizer.decode(cur_input_ids[image_token_start+1:image_token_start+2], skip_special_tokens=True)
+                    
+                else:
+                    text += tokenizer.decode(cur_input_ids[:image_token_start], skip_special_tokens=True)
+                cur_image_idx += 1
+                if getattr(self.config, 'tune_mm_mlp_adapter', False) and getattr(self.config, 'mm_use_im_start_end', False):
+                    cur_input_ids = cur_input_ids[image_token_start+2:]
+                else:
+                    cur_input_ids = cur_input_ids[image_token_start+1:]
+                image_token_indices = torch.where(cur_input_ids == IMAGE_TOKEN_INDEX)[0]
+            if cur_input_ids.numel() > 0:
+                text += tokenizer.decode(cur_input_ids, add_special_tokens=True)
+
+            new_text.append(text)
+        return new_text
 
     def prepare_inputs_labels_for_multimodal(
         self, input_ids, attention_mask, past_key_values, labels, images
     ):
         vision_tower = self.get_vision_tower()
+        
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             if past_key_values is not None and vision_tower is not None and images is not None and input_ids.shape[1] == 1:
                 attention_mask = torch.ones((attention_mask.shape[0], past_key_values[-1][-1].shape[-2] + 1), dtype=attention_mask.dtype, device=attention_mask.device)
-            return input_ids, attention_mask, past_key_values, None, labels
+            return input_ids, attention_mask, past_key_values, None, labels, None
 
         if type(images) is list or images.ndim == 5:
             concat_images = torch.cat([image for image in images], dim=0)
-            image_features = self.encode_images(concat_images)
+            if isinstance(self.get_model().mm_projector, Qformer):
+                if self.get_model().mm_projector.qformer_text_input:
+                    tokenizer = self.get_model().tokenizer
+                    text = self.detokenize(input_ids, tokenizer)
+                else:
+                    text = None
+                img_feat = self.encode_images(concat_images, text)
+            else:
+                img_feat = self.encode_images(concat_images)
+            if isinstance(img_feat, tuple):
+                # image_features = img_feat[0]
+                image_features, counts, route_prob, n_dropped, route_prob_max = img_feat
+                expert_info = {
+                    "counts": counts,
+                    "route_prob": route_prob,
+                    "n_dropped": n_dropped,
+                    "route_prob_max": route_prob_max
+                }
+            else:
+                image_features = img_feat
+                expert_info = None
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
             image_features = [x.flatten(0, 1) for x in image_features]
         else:
-            image_features = self.encode_images(images)
-
+            if isinstance(self.get_model().mm_projector, Qformer):
+                # print(tokenizer.vocab_size, input_ids.max())
+                if self.get_model().mm_projector.qformer_text_input:
+                    tokenizer = self.get_model().tokenizer
+                    text = self.detokenize(input_ids, tokenizer)
+                else:
+                    text = None
+                img_feat = self.encode_images(images, text)
+            else:
+                
+                img_feat = self.encode_images(images)
+            if isinstance(img_feat, tuple):
+                image_features, counts, route_prob, n_dropped, route_prob_max = img_feat
+                expert_info = {
+                    "counts": counts,
+                    "route_prob": route_prob,
+                    "n_dropped": n_dropped,
+                    "route_prob_max": route_prob_max
+                }
+            else:
+                image_features = img_feat
+                expert_info = None
+            # print(images.shape, image_features.shape)
         new_input_embeds = []
         new_labels = [] if labels is not None else None
         cur_image_idx = 0
@@ -213,7 +305,7 @@ class LlavaMetaForCausalLM(ABC):
                 attention_mask = torch.cat((new_attn_mask_pad_left, attention_mask), dim=1)
                 assert attention_mask.shape == new_input_embeds.shape[:2]
 
-        return None, attention_mask, past_key_values, new_input_embeds, new_labels
+        return None, attention_mask, past_key_values, new_input_embeds, new_labels, expert_info
 
     def initialize_vision_tokenizer(self, model_args, tokenizer):
         if model_args.mm_use_im_patch_token:

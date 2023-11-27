@@ -1,0 +1,21 @@
+Node IP: 10.0.1.2 nodes_array: x090-4
+[2023-11-17 23:46:19,264] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-17 23:46:19,296] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2023-11-17 23:48:17,083] [WARNING] [runner.py:196:fetch_hostfile] Unable to find hostfile, will proceed with training with local resources only.
+Detected CUDA_VISIBLE_DEVICES=0,1,2,3 but ignoring it because one or several of --include/--exclude/--num_gpus/--num_nodes cl args were used. If you want to use CUDA_VISIBLE_DEVICES don't pass any of these arguments to deepspeed.
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/bin/deepspeed", line 6, in <module>
+    main()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/launcher/runner.py", line 419, in main
+    raise ValueError("Num nodes is >1 but no extra nodes available via hostfile")
+ValueError: Num nodes is >1 but no extra nodes available via hostfile
+[2023-11-17 23:48:17,143] [WARNING] [runner.py:196:fetch_hostfile] Unable to find hostfile, will proceed with training with local resources only.
+Detected CUDA_VISIBLE_DEVICES=4,5,6,7 but ignoring it because one or several of --include/--exclude/--num_gpus/--num_nodes cl args were used. If you want to use CUDA_VISIBLE_DEVICES don't pass any of these arguments to deepspeed.
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/bin/deepspeed", line 6, in <module>
+    main()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/launcher/runner.py", line 419, in main
+    raise ValueError("Num nodes is >1 but no extra nodes available via hostfile")
+ValueError: Num nodes is >1 but no extra nodes available via hostfile
+srun: error: x090-4: task 0: Exited with exit code 1
+srun: error: x090-5: task 1: Exited with exit code 1

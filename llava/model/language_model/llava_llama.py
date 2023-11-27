@@ -44,9 +44,8 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     def __init__(self, config):
         super(LlamaForCausalLM, self).__init__(config)
         self.model = LlavaLlamaModel(config)
-
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
-
+        self.load_balancing_loss_ceof = 0.01
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -72,7 +71,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
         )
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
-        input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
+        input_ids, attention_mask, past_key_values, inputs_embeds, labels, expert_info = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
         outputs = self.model(
@@ -102,6 +101,24 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
 
+            if expert_info is not None:
+                counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())
+                total = counts.sum(dim=-1, keepdims=True)
+                n_experts = counts.shape[0]
+                # Fraction of tokens routed to each expert
+                # $$f_i = \frac{1}{T} \sum_{x \in \mathscr{B}} \mathbf{1} \{ \mathop{argmax} p(x), i \}$$
+                # $f_i$ is the count of tokens where the argmax of $p(x)$ is equal to $i$.
+                route_frac = counts / total
+                # Mean routing probability
+                # $$P_i = \frac{1}{T} \sum_{x \in \mathscr{B}} p_i (x)$$
+                route_prob = route_prob / total
+                # Load balancing loss
+                # $$\mathscr{L} = N \sum_{i=1}^N f_i \cdot P_i$$
+                # $\mathscr{L}$ is the loss for a single layer and here we are
+                # taking the sum of losses across all layers.
+                load_balancing_loss = n_experts * (route_frac * route_prob).sum()
+                loss = loss + self.load_balancing_loss_ceof * load_balancing_loss
+                
         if not return_dict:
             output = (logits,) + outputs[1:]
             return (loss,) + output if loss is not None else output
