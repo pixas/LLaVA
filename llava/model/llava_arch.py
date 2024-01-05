@@ -52,7 +52,9 @@ class LlavaMetaModel:
         mm_projector_experts = model_args.mm_projector_experts
         qformer_text_input = model_args.qformer_text_input
         qformer_use_pretrained = model_args.qformer_use_pretrained
+        qformer_query_tokens = model_args.qformer_query_tokens
         self.config.mm_vision_tower = vision_tower
+        num_experts_per_token = model_args.mm_num_experts_per_token
 
         if self.get_vision_tower() is None:
             vision_tower = build_vision_tower(model_args)
@@ -77,6 +79,9 @@ class LlavaMetaModel:
         self.config.mm_projector_experts = mm_projector_experts
         self.config.qformer_text_input = qformer_text_input
         self.config.qformer_use_pretrained = qformer_use_pretrained
+        self.config.qformer_query_tokens = qformer_query_tokens
+        self.config.num_experts_per_token = num_experts_per_token
+    
         
         if getattr(self, 'mm_projector', None) is None:
             self.mm_projector = build_vision_projector(self.config)

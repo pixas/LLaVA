@@ -26,10 +26,17 @@ from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
 
+class MoELlamaConfig(LlamaConfig):
+    def __init__(self, vocab_size=32000, hidden_size=4096, intermediate_size=11008, num_hidden_layers=32, num_attention_heads=32, num_key_value_heads=None, hidden_act="silu", max_position_embeddings=2048, initializer_range=0.02, rms_norm_eps=0.000001, use_cache=True, pad_token_id=0, bos_token_id=1, eos_token_id=2, pretraining_tp=1, tie_word_embeddings=False, rope_scaling=None, num_experts=2, is_scale_prob=True,
+                 capacity_factor=2, **kwargs):
+        super().__init__(vocab_size, hidden_size, intermediate_size, num_hidden_layers, num_attention_heads, num_key_value_heads, hidden_act, max_position_embeddings, initializer_range, rms_norm_eps, use_cache, pad_token_id, bos_token_id, eos_token_id, pretraining_tp, tie_word_embeddings, rope_scaling, **kwargs)
+        
 
 class LlavaConfig(LlamaConfig):
     model_type = "llava"
 
+class MoELlavaConfig(LlamaConfig):
+    model_type = "moe_llava"
 
 class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     config_class = LlavaConfig
@@ -37,6 +44,12 @@ class LlavaLlamaModel(LlavaMetaModel, LlamaModel):
     def __init__(self, config: LlamaConfig):
         super(LlavaLlamaModel, self).__init__(config)
 
+class MoELlavaLlamaModel(LlavaMetaModel, LlamaModel):
+    config_class = MoELlavaConfig
+    
+    def __init__(self, config: MoELlamaConfig):
+        super(MoELlavaLlamaModel, self).__init__(config)
+        
 
 class LlavaLlamaForCausalLM(LlamaForCausalLM, LlavaMetaForCausalLM):
     config_class = LlavaConfig

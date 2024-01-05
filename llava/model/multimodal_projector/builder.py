@@ -1,10 +1,14 @@
 import torch
 import torch.nn as nn
 import re
-
 from llava.model.Qformer_utils import BertConfig, BertLMHeadModel
-
+import torch.distributed as dist
+import os 
+import timm.models.hub as timm_hub
+import re 
+import logging 
 from transformers import BertTokenizer
+from llava.model.utils import is_url, download_cached_file
 
 class IdentityMap(nn.Module):
     def __init__(self):
@@ -59,8 +63,8 @@ class FeedForward(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.act = nn.GELU()
-        self.fn1 = nn.Linear(self.in_channels, self.out_channels * scale_factor)
-        self.fn2 = nn.Linear(self.out_channels * scale_factor, self.out_channels)
+        self.fn1 = nn.Linear(self.in_channels, self.in_channels * scale_factor)
+        self.fn2 = nn.Linear(self.in_channels * scale_factor, self.out_channels)
         self.dropout = nn.Dropout(0.1)
     
     def forward(self, x):
@@ -70,7 +74,8 @@ class FeedForward(nn.Module):
         return self.fn2(x)
 
 class SwitchLinear(nn.Module):
-    def __init__(self, mm_hidden_size, channels, n_experts, capacity_factor=1.5, drop_tokens=True, is_scale_prob=True):
+    def __init__(self, mm_hidden_size, channels, n_experts, capacity_factor=1.5, drop_tokens=False, is_scale_prob=False,
+                 num_experts_per_token=1, use_balancing_loss=True):
         super(SwitchLinear, self).__init__()
         self.pre_norm = nn.LayerNorm(mm_hidden_size)
         self.pre_linear = nn.Linear(mm_hidden_size, channels)
@@ -83,8 +88,10 @@ class SwitchLinear(nn.Module):
         self.switch = nn.Linear(channels, n_experts)
         self.channels = channels
         self.softmax = nn.Softmax(-1)
+        self.num_experts_per_token = num_experts_per_token
         
         self.is_scale_prob = is_scale_prob
+        self.use_balancing_loss = use_balancing_loss
     
     def forward(self, x: torch.Tensor):
         x = self.gelu(self.pre_linear(self.pre_norm(x)))
@@ -92,9 +99,10 @@ class SwitchLinear(nn.Module):
         x = x.contiguous().view(-1, d)         
         route_prob = self.softmax(self.switch(x))  # [bs * N, expert]
         
-        route_prob_max, routes = torch.max(route_prob, dim=-1)
+        route_prob_topk, routes_topk = torch.topk(route_prob, self.num_experts_per_token, dim=-1)
+        # route_prob_max, routes = torch.max(route_prob, dim=-1)
         
-        indexes_list = [torch.eq(routes, i).nonzero(as_tuple=True)[0] for i in range(self.n_experts)]
+        indexes_list = [torch.eq(routes_topk, i).nonzero(as_tuple=True)[0] for i in range(self.n_experts)]
         final_output = x.new_zeros(x.shape)
         capacity = int(self.capacity_factor * len(x) / self.n_experts)
         
@@ -114,24 +122,29 @@ class SwitchLinear(nn.Module):
                 dropped.append(indexes_list[i][capacity:])
                 indexes_list[i] = indexes_list[i][:capacity]
         
-        
-        expert_output = [self.experts[i](x[indexes_list[i], :]) for i in range(self.n_experts)]
+        # output = \sum_i E_i(x) * p_i
+        if self.is_scale_prob:
+            expert_output = [self.experts[i](x[indexes_list[i], :]) * route_prob[indexes_list[i], i] for i in range(self.n_experts)]
+        else:
+            expert_output = [self.experts[i](x[indexes_list[i], :])  for i in range(self.n_experts)]
         
         for i in range(self.n_experts):
-            final_output[indexes_list[i], :] = expert_output[i]
+            final_output[indexes_list[i], :] += expert_output[i]
         
         if dropped:
             dropped = torch.cat(dropped)
             final_output[dropped, :] = x[dropped, :]
         
-        if self.is_scale_prob:
-            final_output = final_output * route_prob_max.contiguous().view(-1, 1)
-        else:
-            final_output = final_output * (route_prob_max / route_prob_max.detach()).contiguous().view(-1, 1)
-        
+        # if self.is_scale_prob:
+        #     final_output = final_output * route_prob_max.contiguous().view(-1, 1)
+        # else:
+        #     final_output = final_output * (route_prob_max / route_prob_max.detach()).contiguous().view(-1, 1)
+        assert final_output.shape == (batch_size * N, d)
         final_output = final_output.contiguous().view(batch_size, N, d)
         
-        return final_output, counts, route_prob.sum(0), len(dropped), route_prob_max
+        if not self.use_balancing_loss:
+            return final_output
+        return final_output, counts, route_prob.sum(0), len(dropped), None
 
 class ECSwitchLinear(SwitchLinear):
     def __init__(self, mm_hidden_size, channels, n_experts, capacity_factor=2, drop_tokens=True, is_scale_prob=True):
@@ -259,23 +272,109 @@ class Qformer(nn.Module):
         return inputs_llm
 
 class MoEQformer(Qformer):
-    def __init__(self, in_channels, out_channels, num_query_token=32, cross_attention_freq=2, qformer_text_input=True, max_txt_len=128, n_experts=4):
+    def __init__(self, in_channels, out_channels, num_query_token=32, cross_attention_freq=2, qformer_text_input=True, max_txt_len=128, qformer_use_pretrained=False, n_experts=4,
+                 drop_tokens=True, capacity_factor=1.5):
         super().__init__(in_channels, out_channels, num_query_token, cross_attention_freq, qformer_text_input, max_txt_len)
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
         bert_channel = 768
         encoder_config.encoder_width = bert_channel
         # insert cross-attention layer every other block
         encoder_config.add_cross_attention = True
+        encoder_config.drop_tokens=drop_tokens
+        encoder_config.capacity_factor=capacity_factor
         encoder_config.cross_attention_freq = cross_attention_freq
         encoder_config.query_length = num_query_token
         encoder_config.n_experts = n_experts
+        encoder_config.is_scale_prob = True
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", truncation_side="left")
         self.tokenizer.add_special_tokens({"bos_token": "[DEC]"})
         # self.Qformer = BertLMHeadModel.from_pretrained(
         #     "bert-base-uncased", config=encoder_config
         # )
         self.Qformer = BertLMHeadModel(config=encoder_config)
+        self.Qformer.cls = None 
+        if qformer_use_pretrained:
+            pretrained_config = encoder_config
+            pretrained_config.n_experts = 0
+            pretrained_Qformer = BertLMHeadModel.from_pretrained(
+                "bert-base-uncased", config=pretrained_config
+            )
+            pretrained_Qformer_state_dict = pretrained_Qformer.state_dict()
+            # pretrained_Qformer_state_dict = self.load_from_url()
+            param_mapping = self.create_param_mapping(self.Qformer.state_dict(), pretrained_Qformer.state_dict(), layer=encoder_config.num_hidden_layers)
+            # for key, value in param_mapping.items():
+            #     print(key, value)
+            new_state_dict = {custom_param_name: pretrained_Qformer_state_dict[pretrained_param_name] \
+                for custom_param_name, pretrained_param_name in param_mapping.items()}
+            # for custom_param_name, pretrained_param_name in param_mapping.items():
+            #     param = getattr(pretrained_Qformer, pretrained_param_name)
+            #     setattr(self.Qformer, custom_param_name, param)
+            self.Qformer.load_state_dict(new_state_dict, strict=False)
+            pretrained_Qformer = None
+            # print(self.Qformer.state_dict()['bert.encoder.layer.2.experts.0.fn2.bias'])
+            # print(pretrained_Qformer_state_dict['bert.encoder.layer.2.output_query.dense.bias'])
+        # else:
+        #     self.Qformer = BertLMHeadModel(config=encoder_config)
+        # self.Qformer = BertLMHeadModel(config=encoder_config)
+    
+    def load_from_url(self, url_or_filename="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth"):
+        if is_url(url_or_filename):
+            cached_file = download_cached_file(
+                url_or_filename, check_hash=False, progress=True
+            )
+            checkpoint = torch.load(cached_file, map_location="cpu")
+        elif os.path.isfile(url_or_filename):
+            checkpoint = torch.load(url_or_filename, map_location="cpu")
+        else:
+            raise RuntimeError("checkpoint url or path is invalid")
+
+        state_dict = checkpoint["model"]
+
+        # msg = self.load_state_dict(state_dict, strict=False)
+
+        # # logging.info("Missing keys {}".format(msg.missing_keys))
+        # logging.info("load checkpoint from %s" % url_or_filename)
+
+        # return msg
+        return state_dict
+    
+    def create_param_mapping(self, cur_state_dict, pretrained_state_dict, layer=12):
+        cur_keys = list(cur_state_dict.keys())
+        pretrained_keys = list(pretrained_state_dict.keys())
+        pretrained_keys_set = set(pretrained_keys)
+        pretrained_prefix = pretrained_keys[0].split(".")[0]
+        mapping = {}
+        for key in cur_keys:
+            if key in pretrained_keys_set:
+                mapping[key] = key
+            else:
+                if "experts" in key and "fn1" in key:
+                    # bert.encoder.layer.11.experts.0.fn1.weight -> bert.encoder.layer.11.intermediate_query.dense.weight
+                    words = key.split(".")
+                    prefix = words[:4]
+                    suffix = words[7:]
+                    new_words = ["intermediate_query", "dense"]
+                    new_key = ".".join(prefix + new_words + suffix)
+                    mapping[key] = new_key 
+                elif "experts" in key and "fn2" in key:
+                    
+                    words = key.split(".")
+                    prefix = words[:4]
+                    suffix = words[7:]
+                    new_words = ["output_query", "dense"]
+                    new_key = ".".join(prefix + new_words + suffix)
+                    mapping[key] = new_key 
         
+        for l in range(layer):
+            # bert.encoder.layer.0.LayerNorm.weight -> bert.encoder.layer.0.output_query.LayerNorm.weight
+            old_key = f"bert.encoder.layer.{l}.LayerNorm"
+            new_key = f"bert.encoder.layer.{l}.output_query.LayerNorm"
+            if pretrained_prefix == 'Qformer':
+                new_key = "Qformer." + new_key
+            mapping[old_key + ".weight"] = new_key + ".weight"
+            mapping[old_key + ".bias"] = new_key + ".bias"
+        return mapping
+                
     def forward(self, image_features, text=None):
         image_atts = torch.ones(image_features.size()[:-1], dtype=torch.long).to(image_features.device)
         image_features = self.in_proj(image_features)
@@ -292,7 +391,7 @@ class MoEQformer(Qformer):
             # query_atts = query_atts.repeat([image_features.shape[0], 1])
             Qformer_atts = torch.cat([query_atts, text_Qformer.attention_mask],dim=1)
 
-            query_output, moe_output = self.Qformer.bert(
+            temp_output = self.Qformer.bert(
                 text_Qformer.input_ids,
                 attention_mask=Qformer_atts,
                 query_embeds=query_tokens,
@@ -301,14 +400,94 @@ class MoEQformer(Qformer):
                 return_dict=True,
             )
         else:
-            query_output, moe_output = self.Qformer.bert(
+            temp_output = self.Qformer.bert(
                 query_embeds=query_tokens,
                 encoder_hidden_states=image_features,
                 encoder_attention_mask=image_atts,
                 return_dict=True,
             )
+        query_output = temp_output['bert_output']
+        moe_output = temp_output['moe_output']
         inputs_llm = self.llm_proj(query_output.last_hidden_state[:,:self.query_tokens.size(1),:])
-        return inputs_llm, *moe_output
+        counts, route_prob, n_dropped, route_prob_max = moe_output
+        return inputs_llm, torch.stack(counts), torch.stack(route_prob), n_dropped, torch.stack(route_prob_max)
+
+
+class ECMoEQformer(MoEQformer):
+    def __init__(self, in_channels, out_channels, num_query_token=32, cross_attention_freq=2, qformer_text_input=True, max_txt_len=128, qformer_use_pretrained=False, n_experts=4, drop_tokens=True, capacity_factor=1.5):
+        super().__init__(in_channels, out_channels, num_query_token, cross_attention_freq, qformer_text_input, max_txt_len, qformer_use_pretrained, n_experts, drop_tokens, capacity_factor)
+        encoder_config = BertConfig.from_pretrained("bert-base-uncased")
+        bert_channel = 768
+        encoder_config.encoder_width = bert_channel
+        # insert cross-attention layer every other block
+        encoder_config.add_cross_attention = True
+        encoder_config.moe_type = 'ec_moe'
+        encoder_config.drop_tokens=drop_tokens
+        encoder_config.capacity_factor=capacity_factor
+        encoder_config.cross_attention_freq = cross_attention_freq
+        encoder_config.query_length = num_query_token
+        encoder_config.n_experts = n_experts
+        encoder_config.is_scale_prob = True
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", truncation_side="left")
+        self.tokenizer.add_special_tokens({"bos_token": "[DEC]"})
+
+        self.Qformer = BertLMHeadModel(config=encoder_config)
+        self.Qformer.cls = None 
+        if qformer_use_pretrained:
+            pretrained_config = encoder_config
+            pretrained_config.n_experts = 0
+            pretrained_Qformer = BertLMHeadModel.from_pretrained(
+                "bert-base-uncased", config=pretrained_config
+            )
+            pretrained_Qformer_state_dict = pretrained_Qformer.state_dict()
+
+            param_mapping = self.create_param_mapping(self.Qformer.state_dict(), pretrained_Qformer.state_dict(), layer=encoder_config.num_hidden_layers)
+
+            new_state_dict = {custom_param_name: pretrained_Qformer_state_dict[pretrained_param_name] \
+                for custom_param_name, pretrained_param_name in param_mapping.items()}
+
+            self.Qformer.load_state_dict(new_state_dict, strict=False)
+            pretrained_Qformer = None
+   
+    def forward(self, image_features, text=None):
+        image_atts = torch.ones(image_features.size()[:-1], dtype=torch.long).to(image_features.device)
+        image_features = self.in_proj(image_features)
+        query_tokens = self.query_tokens.expand(image_features.shape[0], -1, -1)
+        if self.qformer_text_input:
+            text_Qformer = self.tokenizer(
+                text,
+                padding='longest',
+                truncation=True,
+                max_length=self.max_txt_len,
+                return_tensors="pt",
+            ).to(image_features.device)
+            query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(image_features.device)
+            # query_atts = query_atts.repeat([image_features.shape[0], 1])
+            Qformer_atts = torch.cat([query_atts, text_Qformer.attention_mask],dim=1)
+
+            temp_output = self.Qformer.bert(
+                text_Qformer.input_ids,
+                attention_mask=Qformer_atts,
+                query_embeds=query_tokens,
+                encoder_hidden_states=image_features,
+                encoder_attention_mask=image_atts,
+                return_dict=True,
+            )
+        else:
+            temp_output = self.Qformer.bert(
+                query_embeds=query_tokens,
+                encoder_hidden_states=image_features,
+                encoder_attention_mask=image_atts,
+                return_dict=True,
+            )
+        query_output = temp_output['bert_output']
+        # moe_output = temp_output['moe_output']
+        inputs_llm = self.llm_proj(query_output.last_hidden_state[:,:self.query_tokens.size(1),:])
+        # counts, route_prob, n_dropped, route_prob_max = moe_output
+        return inputs_llm
+
+
+
 
 def build_vision_projector(config, delay_load=False, **kwargs):
     projector_type = getattr(config, 'mm_projector_type', 'linear')
@@ -320,13 +499,28 @@ def build_vision_projector(config, delay_load=False, **kwargs):
         return GatedLinear(config.mm_hidden_size, config.hidden_size, config.mm_projector_gates)
 
     if projector_type == 'moe':
-        return SwitchLinear(config.mm_hidden_size, config.hidden_size, config.mm_projector_experts)
+        return SwitchLinear(config.mm_hidden_size, config.hidden_size, config.mm_projector_experts,
+                            num_experts_per_token=config.num_experts_per_token)
 
     if projector_type == 'ec_moe':
         return ECSwitchLinear(config.mm_hidden_size, config.hidden_size, config.mm_projector_experts)
     
     if projector_type == 'qformer':
-        return Qformer(config.mm_hidden_size, config.hidden_size, qformer_text_input=config.qformer_text_input, qformer_use_pretrained=config.qformer_use_pretrained)
+        return Qformer(config.mm_hidden_size, config.hidden_size, qformer_text_input=config.qformer_text_input, qformer_use_pretrained=getattr(config, "qformer_use_pretrained", False) ,
+                       num_query_token=getattr(config, "qformer_query_tokens", 32))
+    
+    if projector_type == 'moe_qformer':
+        return MoEQformer(config.mm_hidden_size, config.hidden_size, qformer_text_input=config.qformer_text_input, 
+                          qformer_use_pretrained=getattr(config, "qformer_use_pretrained", False),
+                          n_experts=config.mm_projector_experts,
+                          num_query_token=getattr(config, "qformer_query_tokens", 32))
+    
+    if projector_type == 'ecmoe_qformer':
+        return ECMoEQformer(config.mm_hidden_size, config.hidden_size, qformer_text_input=config.qformer_text_input, 
+                          qformer_use_pretrained=getattr(config, "qformer_use_pretrained", False),
+                          n_experts=config.mm_projector_experts,
+                          num_query_token=getattr(config, "qformer_query_tokens", 32))
+    
     
     mlp_gelu_match = re.match(r'^mlp(\d+)x_gelu$', projector_type)
     if mlp_gelu_match:
@@ -343,6 +537,6 @@ def build_vision_projector(config, delay_load=False, **kwargs):
     raise ValueError(f'Unknown projector type: {projector_type}')
 
 if __name__ == "__main__":
-    mm_projector = Qformer(1024, 4096, qformer_text_input=True)
-    for name, param in mm_projector.named_parameters():
-        print(name, param.shape)
+    mm_projector = MoEQformer(1024, 4096, qformer_text_input=True,qformer_use_pretrained=True, n_experts=4)
+    # for name, param in mm_projector.named_parameters():
+    #     print(name, param.shape)

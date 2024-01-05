@@ -12,8 +12,13 @@ class CLIPVisionTower(nn.Module):
 
         self.vision_tower_name = vision_tower
         self.select_layer = args.mm_vision_select_layer
+        self.tune_vision_tower = getattr(args, "tune_vision_tower", False)
+        # try:
+        #     self.tune_vision_tower = args.tune_vision_tower 
+        # except:
+        #     self.tune_vision_tower = False
         self.select_feature = getattr(args, 'mm_vision_select_feature', 'patch')
-
+        self.tuned_vision_path = getattr(args, "tuned_vision_path", None)
         if not delay_load:
             self.load_model()
         else:
@@ -21,9 +26,23 @@ class CLIPVisionTower(nn.Module):
 
     def load_model(self):
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
-        self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name)
-        self.vision_tower.requires_grad_(False)
+        
+        
+        if self.tuned_vision_path is not None:
+            vision_config = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
+            self.vision_tower = CLIPVisionModel(vision_config)
+            vision_weights = torch.load(self.tuned_vision_path, map_location='cpu')
+            def get_w(weights, keyword):
+                return {k.split(keyword + '.')[-1]: v for k, v in weights.items() if keyword in k}
+            self.vision_tower.load_state_dict(get_w(vision_weights, 'vision_tower'), strict=True)
+        else:
+            self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name)
 
+        if not self.tune_vision_tower:
+            self.vision_tower.requires_grad_(False)
+        else:
+            print("unfreeze vision tower")
+            self.vision_tower.requires_grad_(True)
         self.is_loaded = True
 
     def feature_select(self, image_forward_outs):
@@ -36,7 +55,7 @@ class CLIPVisionTower(nn.Module):
             raise ValueError(f'Unexpected select feature: {self.select_feature}')
         return image_features
 
-    @torch.no_grad()
+    # @torch.no_grad()
     def forward(self, images):
         if type(images) is list:
             image_features = []

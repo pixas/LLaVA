@@ -12,7 +12,7 @@ import math
 import os
 import warnings
 from dataclasses import dataclass
-from typing import Optional, Tuple, Dict, Any
+from typing import Mapping, Optional, Tuple, Dict, Any
 
 import torch
 from torch import Tensor, device, dtype, nn
@@ -510,11 +510,15 @@ class MoEBertLayer(BertLayer):
         self.n_experts = config.n_experts
         self.drop_tokens = config.drop_tokens
         self.capacity_factor=config.capacity_factor
+        self.is_scale_prob=config.is_scale_prob
         self.experts = nn.ModuleList([FeedForward(config.hidden_size, config.hidden_size) for i in range(self.n_experts)])
         self.switch = nn.Linear(config.hidden_size, self.n_experts)
         self.channels = config.hidden_size
         self.softmax = nn.Softmax(-1)
-    
+        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        # self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+
     def forward(
         self,
         hidden_states,
@@ -568,6 +572,12 @@ class MoEBertLayer(BertLayer):
                 self.seq_len_dim,
                 query_attention_output,
             )
+            if isinstance(moe_output, tuple):
+                layer_output = moe_output[0]
+                moe_outputs = moe_output[1:]
+            else:
+                layer_output = moe_output
+                moe_outputs = None
             layer_output = moe_output[0]
             if attention_output.shape[1] > query_length:
                 layer_output_text = apply_chunking_to_forward(
@@ -590,7 +600,7 @@ class MoEBertLayer(BertLayer):
 
         return {
                 "outputs": outputs,
-                "moe_output": moe_output[1:]
+                "moe_output": moe_outputs
             }
     
     def feed_forward_chunk_query(self, attention_output):
@@ -638,9 +648,77 @@ class MoEBertLayer(BertLayer):
             final_output = final_output * (route_prob_max / route_prob_max.detach()).contiguous().view(-1, 1)
         
         final_output = final_output.contiguous().view(batch_size, N, d)
-        
+        # final_output = self.dropout(final_output)
+        final_output = self.LayerNorm(final_output + attention_output)
         return final_output, counts, route_prob.sum(0), len(dropped), route_prob_max
+
+
+class ECMoEBertLayer(MoEBertLayer):
+    def __init__(self, config, layer_num):
+        super().__init__(config, layer_num)
+    
+    def feed_forward_chunk_query(self, attention_output):
+        # attention_output [bs, n, d]
+        x = attention_output
+        batch_size, N, d = x.shape 
+        x = x.contiguous().view(-1, d)     
+        n = x.shape[0]    
+        k = int(self.capacity_factor * n / self.n_experts)
+        route_prob = self.softmax(self.switch(x))  # [bs * N, expert]
+        G, I  = torch.topk(route_prob.transpose(-1, -2), k)
+        final_output = x.new_zeros((n, self.channels))
+        X_in = x[I]  # [e, k, d]
+        expert_output = []
+        for i in range(self.n_experts):
+            expert_output.append(self.experts[i](X_in[i]))
         
+        expert_output = torch.stack(expert_output, 0)
+        expert_output = expert_output * G.unsqueeze(-1)
+        final_output.index_add_(0, I.contiguous().view(-1), expert_output.contiguous().view(-1, self.channels))
+        final_output = final_output.contiguous().view(batch_size, N, -1)
+        final_output = self.LayerNorm(final_output + attention_output)
+        return final_output
+        # route_prob_max, routes = torch.max(route_prob, dim=-1)
+        
+        # indexes_list = [torch.eq(routes, i).nonzero(as_tuple=True)[0] for i in range(self.n_experts)]
+        # final_output = x.new_zeros(x.shape)
+        # capacity = int(self.capacity_factor * len(x) / self.n_experts)
+        
+        # # how many tokens are routed to ith expert
+        # counts = x.new_tensor([len(indexes_list[i]) for i in range(self.n_experts)])
+        
+        # dropped = []
+        
+        # if self.drop_tokens:
+        #     for i in range(self.n_experts):
+        #         if len(indexes_list[i]) < capacity:
+        #             continue
+                
+        #         # drop tokens 
+        #         indexes_list[i] = indexes_list[i][torch.randperm(len(indexes_list[i]))]
+                
+        #         dropped.append(indexes_list[i][capacity:])
+        #         indexes_list[i] = indexes_list[i][:capacity]
+        
+        
+        # expert_output = [self.experts[i](x[indexes_list[i], :]) for i in range(self.n_experts)]
+        
+        # for i in range(self.n_experts):
+        #     final_output[indexes_list[i], :] = expert_output[i]
+        
+        # if dropped:
+        #     dropped = torch.cat(dropped)
+        #     final_output[dropped, :] = x[dropped, :]
+        
+        # if self.is_scale_prob:
+        #     final_output = final_output * route_prob_max.contiguous().view(-1, 1)
+        # else:
+        #     final_output = final_output * (route_prob_max / route_prob_max.detach()).contiguous().view(-1, 1)
+        
+        # final_output = final_output.contiguous().view(batch_size, N, d)
+        # # final_output = self.dropout(final_output)
+        # final_output = self.LayerNorm(final_output + attention_output)
+        # return final_output, counts, route_prob.sum(0), len(dropped), route_prob_max 
 
 class BertEncoder(nn.Module):
     def __init__(self, config):
@@ -650,6 +728,15 @@ class BertEncoder(nn.Module):
             self.layer = nn.ModuleList(
                 [MoEBertLayer(config, i) for i in range(config.num_hidden_layers)]
             )
+            moe_type = getattr(config, 'meo_type', 'moe')
+            if moe_type == 'moe':
+                self.layer = nn.ModuleList(
+                    [MoEBertLayer(config, i) for i in range(config.num_hidden_layers)]
+                )
+            elif moe_type == 'ec_moe':
+                self.layer = nn.ModuleList(
+                    [ECMoEBertLayer(config, i) for i in range(config.num_hidden_layers)]
+                )
         else:
             self.layer = nn.ModuleList(
                 [BertLayer(config, i) for i in range(config.num_hidden_layers)]
@@ -721,7 +808,7 @@ class BertEncoder(nn.Module):
                     query_length,
                 )
             if isinstance(layer_outputs, dict):
-                hidden_states = layer_outputs['outputs']
+                hidden_states = layer_outputs['outputs'][0]
                 moe_output_layer = layer_outputs['moe_output']
                 for i in range(4):
                     moe_output[i].append(moe_output_layer[i])
@@ -1105,7 +1192,7 @@ class BertModel(BertPreTrainedModel):
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
         head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
 
-        encoder_outputs = self.encoder(
+        temp_output = self.encoder(
             embedding_output,
             attention_mask=extended_attention_mask,
             head_mask=head_mask,
@@ -1118,11 +1205,11 @@ class BertModel(BertPreTrainedModel):
             return_dict=return_dict,
             query_length=query_length,
         )
-        if encoder_outputs['moe_output'] is not None:
-            encoder_outputs = encoder_outputs['bert_output']
-            moe_outputs = encoder_outputs['moe_output']
+        if temp_output['moe_output'] is not None:
+            encoder_outputs = temp_output['bert_output']
+            moe_outputs = temp_output['moe_output']
         else:
-            encoder_outputs = encoder_outputs['bert_output']
+            encoder_outputs = temp_output['bert_output']
             moe_outputs = None
         sequence_output = encoder_outputs[0]
         pooled_output = (
@@ -1404,3 +1491,11 @@ class BertForMaskedLM(BertPreTrainedModel):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+
+if __name__ == "__main__":
+    config = BertConfig.from_pretrained("bert-base-uncased")
+    config.n_experts = 0
+    model = BertLMHeadModel(config=config)
+    
+    x = getattr(model, "bert.encoder.layer.0.intermediate_query.dense.weight")
+    print(x)

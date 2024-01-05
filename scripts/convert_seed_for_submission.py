@@ -7,6 +7,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--annotation-file", type=str)
     parser.add_argument("--result-file", type=str)
+    parser.add_argument('--skip-video', action='store_true')
     parser.add_argument("--result-upload-file", type=str)
     return parser.parse_args()
 
@@ -67,6 +68,9 @@ if __name__ == "__main__":
             if qid in results:
                 result = results[qid]
             else:
+                if args.skip_video:
+                    if isinstance(qid, str):
+                        continue
                 result = results[int(qid)]
             fp.write(json.dumps({
                 'question_id': qid,

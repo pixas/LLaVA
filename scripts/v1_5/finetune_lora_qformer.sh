@@ -3,7 +3,7 @@
 #SBATCH -J FT-qformer-llava7b
 #SBATCH --partition=x090
 #SBATCH --nodes=1
-#SBATCH --gres=gpu:4  
+#SBATCH --gres=gpu:8  
 #SBATCH --cpus-per-task=32
 #SBATCH --ntasks-per-node=1    
 #SBATCH --mem=128G
@@ -15,7 +15,7 @@ nodes_array=($nodes)
 head_node=${nodes_array[0]}
 head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
 
-GPUS_PER_NODE=4
+GPUS_PER_NODE=8
 NNODES=$SLURM_NNODES
 
 echo Node IP: $head_node_ip nodes_array: $nodes_array
@@ -39,8 +39,9 @@ srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
     --data_path ./playground/data/llava_v1_5_mix665k_clean.json \
     --image_folder ./playground/data \
     --vision_tower openai/clip-vit-large-patch14-336 \
-    --pretrain_mm_mlp_adapter /remote-home/syjiang/checkpoints/llava-v1.5-7b-pretrain-qformer-scratch/mm_projector.bin \
+    --pretrain_mm_mlp_adapter /remote-home/syjiang/checkpoints/llava-v1.5-7b-pretrain-qformer-5e4_256q/mm_projector.bin \
     --mm_projector_type qformer \
+    --qformer_query_tokens 256 \
     --qformer_text_input True \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
@@ -48,14 +49,14 @@ srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --output_dir /remote-home/syjiang/checkpoints/llava-v1.5-7b-qformer-lora2 \
+    --output_dir /remote-home/syjiang/checkpoints/llava-v1.5-7b-qformer-lora-q256 \
     --num_train_epochs 1 \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 8 \
+    --gradient_accumulation_steps 4 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 500 \
+    --save_steps 1000 \
     --save_total_limit 1 \
     --learning_rate 2e-4 \
     --weight_decay 0. \

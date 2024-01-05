@@ -24,10 +24,15 @@ def prompt_processor(prompt):
             question = prompt.split('\n')[1]
         else:
             question = prompt.split('\n')[0]
+    elif 'Reference OCR token: ' in prompt and len(prompt.split('\n')) == 2:
+        question = prompt.split('\n')[1].replace("Question: ", "")
     elif len(prompt.split('\n')) == 2:
         question = prompt.split('\n')[0]
     else:
         assert False
+    
+    if question.startswith("Question: "):
+        question = question.replace("Question: ", "")
 
     return question.lower()
 

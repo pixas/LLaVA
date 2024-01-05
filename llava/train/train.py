@@ -58,14 +58,18 @@ class ModelArguments:
     version: Optional[str] = field(default="v0")
     freeze_backbone: bool = field(default=False)
     tune_mm_mlp_adapter: bool = field(default=False)
+    tune_vision_tower: bool = field(default=False)
+    tuned_vision_path: Optional[str] = field(default=None)
     vision_tower: Optional[str] = field(default=None)
     mm_vision_select_layer: Optional[int] = field(default=-1)   # default to the last layer
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
     mm_projector_type: Optional[str] = field(default='mlp2x_gelu')
     mm_projector_gates: Optional[int] = field(default=1)
     mm_projector_experts: Optional[int] = field(default=4)
+    mm_num_experts_per_token: Optional[int] = field(default=2)
     qformer_text_input: Optional[bool] = field(default=False)
     qformer_use_pretrained: Optional[bool] = field(default=False)
+    qformer_query_tokens: Optional[int] = field(default=32)
     mm_use_im_start_end: bool = field(default=False)
     mm_use_im_patch_token: bool = field(default=True)
     mm_vision_select_feature: Optional[str] = field(default="patch")
@@ -201,6 +205,13 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
             keys_to_match.extend(['embed_tokens', 'embed_in'])
 
         weight_to_save = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), keys_to_match)
+        save_vision=False
+        if getattr(trainer.args, "tune_vision_tower", False):
+            vision_keys_to_match = ['vision_tower']
+            vision_tower_weight = get_mm_adapter_state_maybe_zero_3(trainer.model.named_parameters(), vision_keys_to_match)
+            # weight_to_save.update(vision_tower_weight)
+            save_vision = True
+            
         trainer.model.config.save_pretrained(output_dir)
 
         current_folder = output_dir.split('/')[-1]
@@ -210,8 +221,14 @@ def safe_save_model_for_hf_trainer(trainer: transformers.Trainer,
                 mm_projector_folder = os.path.join(parent_folder, "mm_projector")
                 os.makedirs(mm_projector_folder, exist_ok=True)
                 torch.save(weight_to_save, os.path.join(mm_projector_folder, f'{current_folder}.bin'))
+                if save_vision:
+                    vision_folder = os.path.join(parent_folder, "vision_tower")
+                    os.makedirs(vision_folder, exist_ok=True)
+                    torch.save(vision_tower_weight, os.path.join(vision_folder, f'{current_folder}.bin'))
             else:
                 torch.save(weight_to_save, os.path.join(output_dir, f'mm_projector.bin'))
+                if save_vision:
+                    torch.save(vision_tower_weight, os.path.join(output_dir, f'vision_tower.bin'))
         return
 
     if trainer.deepspeed:
@@ -841,7 +858,7 @@ def train():
         lora_config = LoraConfig(
             r=training_args.lora_r,
             lora_alpha=training_args.lora_alpha,
-            target_modules=find_all_linear_names(model, True if model_args.mm_projector_type == 'qformer' else False),
+            target_modules=find_all_linear_names(model, False),
             lora_dropout=training_args.lora_dropout,
             bias=training_args.lora_bias,
             task_type="CAUSAL_LM",
@@ -897,10 +914,12 @@ def train():
     model.get_model().get_tokenizer(tokenizer)
     # print(model.get_model().tokenizer)
     if model_args.vision_tower is not None:
+        # rank0_print(model_args)
         model.get_model().initialize_vision_modules(
             model_args=model_args,
             fsdp=training_args.fsdp
         )
+        # rank0_print(model_args)
         
         vision_tower = model.get_vision_tower()
         vision_tower.to(dtype=torch.bfloat16 if training_args.bf16 else torch.float16, device=training_args.device)
@@ -915,6 +934,11 @@ def train():
         if model_args.tune_mm_mlp_adapter:
             model.requires_grad_(False)
             for p in model.get_model().mm_projector.parameters():
+                p.requires_grad = True
+        # rank0_print(model_args)
+        model.config.tune_vision_tower = training_args.tune_vision_tower = model_args.tune_vision_tower
+        if model_args.tune_vision_tower:
+            for p in model.get_model().vision_tower.parameters():
                 p.requires_grad = True
 
         model.config.freeze_mm_mlp_adapter = training_args.freeze_mm_mlp_adapter
@@ -931,6 +955,10 @@ def train():
         model.config.mm_use_im_patch_token = model_args.mm_use_im_patch_token
         model.initialize_vision_tokenizer(model_args, tokenizer=tokenizer)
     
+    # if training_args.local_rank == 0 or training_args.local_rank == -1:
+    #     for name, param in model.named_parameters():
+    #         if param.requires_grad:
+    #             print(name)
 
     # if training_args.local_rank == 0 or training_args.local_rank == -1:
     # print(model.tokenizer, tokenizer)
