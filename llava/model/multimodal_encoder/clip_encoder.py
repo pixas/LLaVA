@@ -35,6 +35,7 @@ class CLIPVisionTower(nn.Module):
             def get_w(weights, keyword):
                 return {k.split(keyword + '.')[-1]: v for k, v in weights.items() if keyword in k}
             self.vision_tower.load_state_dict(get_w(vision_weights, 'vision_tower'), strict=True)
+            print("load tuned vision tower")
         else:
             self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name)
 

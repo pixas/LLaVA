@@ -1,42 +1,15 @@
 #!/bin/bash
 
-#SBATCH -J FT-sharegpt4v-llava7b
-#SBATCH --partition=x090
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:4  
-#SBATCH --cpus-per-task=32
-#SBATCH --ntasks-per-node=1    
-#SBATCH --mem-per-cpu=4G  
-#SBATCH --output=logs/llava7b_pretrain_sharegpt4v.out
-###SBATCH --kill-on-bad-exit=1
-
-nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
-nodes_array=($nodes)
-head_node=${nodes_array[0]}
-head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
-
-GPUS_PER_NODE=4
-NNODES=$SLURM_NNODES
-
-echo Node IP: $head_node_ip nodes_array: $nodes_array
-srun bash -c 'echo $SLURMD_NODENAME-$SLURM_JOB_GPUS' # 打印出不同机器上分配的显卡编号
-
-export LOGLEVEL=INFO
-export NCCL_DEBUG=ERROR
-export NCCL_SOCKET_IFNAME="eth0"
-export MASTER_PORT=29571
-
-srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
-    --nproc_per_node $GPUS_PER_NODE \
-    --nnodes $NNODES \
-    --rdzv_id $MASTER_PORT --rdzv_backend c10d --rdzv_endpoint $head_node_ip:$MASTER_PORT \
-    --node_rank $SLURM_PROCID \
+python -u -m torch.distributed.run \
+    --nproc_per_node 4 \
+    --nnodes 1 \
+    --rdzv_id 29572 --rdzv_backend c10d --rdzv_endpoint localhost:29572 \
     llava/train/train_mem.py \
     --deepspeed ./scripts/zero2.json \
-    --model_name_or_path /remote-home/share/models/vicuna-7b-v1.5 \
-    --version plain \
-    --data_path /remote-home/syjiang/datasets/share_gpt4v/sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k.json \
-    --image_folder /remote-home/syjiang/datasets/share_gpt4v \
+    --model_name_or_path /remote-home/yushengliao/syjiang/checkpoints/vicuna-7b-v1.5 \
+    --version llava_llama_2 \
+    --data_path /remote-home/yushengliao/syjiang/datasets/share_gpt4v/sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k.json \
+    --image_folder /remote-home/yushengliao/syjiang/datasets/share_gpt4v \
     --vision_tower openai/clip-vit-large-patch14-336 \
     --mm_projector_type mlp2x_gelu \
     --tune_mm_mlp_adapter True \

@@ -12,20 +12,20 @@ python -u -m torch.distributed.run \
     --data_path ./playground/data/llava_v1_5_mix665k_clean.json \
     --image_folder ./playground/data \
     --vision_tower openai/clip-vit-large-patch14-336 \
-    --pretrain_mm_mlp_adapter /remote-home/syjiang/checkpoints/llava-v1.5-7b-pretrain-sharegpt4v/mm_projector.bin \
+    --pretrain_mm_mlp_adapter /remote-home/yushengliao/syjiang/checkpoints/llava-v1.5-7b-pretrain-visualenc-baseline/mm_projector.bin \
+    --tuned_vision_path /remote-home/yushengliao/syjiang/checkpoints/llava-v1.5-7b-pretrain-visualenc-baseline/vision_tower.bin \
     --mm_projector_type mlp2x_gelu \
-    --mm_projector_gates 3 \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --output_dir /remote-home/syjiang/checkpoints/llava-v1.5-7b-sharepretrain-lora \
+    --output_dir /remote-home/yushengliao/syjiang/checkpoints/llava-v1.5-7b-visualenc-lora \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 8 \
+    --gradient_accumulation_steps 4 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 50000 \

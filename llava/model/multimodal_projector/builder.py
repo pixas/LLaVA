@@ -72,79 +72,145 @@ class FeedForward(nn.Module):
         x = self.act(x)
         x = self.dropout(x)
         return self.fn2(x)
+    
+
+class LLaMAFeedForward(nn.Module):
+    def __init__(self, in_channels, out_channels, scale_factor=4, *args, **kwargs) -> None:
+        super(LLaMAFeedForward, self).__init__(*args, **kwargs)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.act = nn.SiLU()
+        self.fn1 = nn.Linear(self.in_channels, int(self.in_channels * scale_factor))
+        self.fn2 = nn.Linear(int(self.in_channels * scale_factor), self.out_channels)
+        self.fn3 = nn.Linear(self.in_channels, int(self.in_channels * scale_factor))
+        
+        
+        # self.dropout = nn.Dropout(0.1)
+    
+    def forward(self, x):
+        # x = self.fn1(x)
+        # x = self.act(x)
+        # x = self.dropout(x)
+        
+        x = self.fn2(self.act(self.fn1(x)) * self.fn3(x))
+        
+        return x    
+
 
 class SwitchLinear(nn.Module):
-    def __init__(self, mm_hidden_size, channels, n_experts, capacity_factor=1.5, drop_tokens=False, is_scale_prob=False,
-                 num_experts_per_token=1, use_balancing_loss=True):
+    def __init__(self, mm_hidden_size, channels, n_experts,
+                 num_experts_per_token=1, use_balancing_loss=False):
         super(SwitchLinear, self).__init__()
-        self.pre_norm = nn.LayerNorm(mm_hidden_size)
-        self.pre_linear = nn.Linear(mm_hidden_size, channels)
-        self.gelu = nn.GELU()
+        # self.pre_norm = nn.LayerNorm(mm_hidden_size)
+        # self.pre_linear = nn.Linear(mm_hidden_size, channels)
+        # self.gelu = nn.GELU()
         self.mm_hidden_size = mm_hidden_size
         self.n_experts = n_experts
-        self.drop_tokens = drop_tokens
-        self.capacity_factor=capacity_factor
-        self.experts = nn.ModuleList([FeedForward(channels, channels) for i in range(self.n_experts)])
-        self.switch = nn.Linear(channels, n_experts)
+
+        self.experts = nn.ModuleList([LLaMAFeedForward(self.mm_hidden_size, channels) for i in range(self.n_experts)])
+        self.switch = nn.Linear(self.mm_hidden_size, n_experts)
         self.channels = channels
         self.softmax = nn.Softmax(-1)
         self.num_experts_per_token = num_experts_per_token
         
-        self.is_scale_prob = is_scale_prob
         self.use_balancing_loss = use_balancing_loss
     
     def forward(self, x: torch.Tensor):
-        x = self.gelu(self.pre_linear(self.pre_norm(x)))
+        # x = self.gelu(self.pre_linear(self.pre_norm(x)))
         batch_size, N, d = x.shape 
         x = x.contiguous().view(-1, d)         
-        route_prob = self.softmax(self.switch(x))  # [bs * N, expert]
+        gate_logits = self.switch(x)  # [bs * N, expert]
+        weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
+        weights = self.softmax(weights)  # [bs * N, expert]
+        results = torch.zeros((batch_size * N, self.channels)).to(x) # bs*N, d
+        for i, expert in enumerate(self.experts):
+            batch_idx, nth_expert = torch.where(selected_experts == i) 
+            # batch_idx: [bs * N, 1]
+            # nth_expert: [bs * N, 1]
+            results[batch_idx] += weights[batch_idx, nth_expert, None] * expert(
+                x[batch_idx]
+            )
         
-        route_prob_topk, routes_topk = torch.topk(route_prob, self.num_experts_per_token, dim=-1)
-        # route_prob_max, routes = torch.max(route_prob, dim=-1)
+        results = results.contiguous().view(batch_size, N, self.channels)
+        return results
+# class SwitchLinear(nn.Module):
+#     def __init__(self, mm_hidden_size, channels, n_experts, capacity_factor=1.5, drop_tokens=False, is_scale_prob=False,
+#                  num_experts_per_token=1, use_balancing_loss=True):
+#         super(SwitchLinear, self).__init__()
+#         self.pre_norm = nn.LayerNorm(mm_hidden_size)
+#         self.pre_linear = nn.Linear(mm_hidden_size, channels)
+#         self.gelu = nn.GELU()
+#         self.mm_hidden_size = mm_hidden_size
+#         self.n_experts = n_experts
+#         self.drop_tokens = drop_tokens
+#         self.capacity_factor=capacity_factor
+#         self.experts = nn.ModuleList([FeedForward(channels, channels) for i in range(self.n_experts)])
+#         self.switch = nn.Linear(channels, n_experts)
+#         self.channels = channels
+#         self.softmax = nn.Softmax(-1)
+#         self.num_experts_per_token = num_experts_per_token
         
-        indexes_list = [torch.eq(routes_topk, i).nonzero(as_tuple=True)[0] for i in range(self.n_experts)]
-        final_output = x.new_zeros(x.shape)
-        capacity = int(self.capacity_factor * len(x) / self.n_experts)
+#         self.is_scale_prob = is_scale_prob
+#         self.use_balancing_loss = use_balancing_loss
+    
+#     def forward(self, x: torch.Tensor):
+#         x = self.gelu(self.pre_linear(self.pre_norm(x)))
+#         batch_size, N, d = x.shape 
+#         x = x.contiguous().view(-1, d)         
+#         # route_prob = self.softmax(self.switch(x))  # [bs * N, expert]
         
-        # how many tokens are routed to ith expert
-        counts = x.new_tensor([len(indexes_list[i]) for i in range(self.n_experts)])
+#         # route_prob_topk, routes_topk = torch.topk(route_prob, self.num_experts_per_token, dim=-1)
+
         
-        dropped = []
+#         route_prob_topk, routes_topk = torch.topk(self.switch(x), self.num_experts_per_token, dim=-1)
+#         route_prob_topk_norm = self.softmax(route_prob_topk)
         
-        if self.drop_tokens:
-            for i in range(self.n_experts):
-                if len(indexes_list[i]) < capacity:
-                    continue
+#         # route_prob_max, routes = torch.max(route_prob, dim=-1)
+        
+#         indexes_list = [torch.eq(routes_topk, i).nonzero(as_tuple=True)[0] for i in range(self.n_experts)]
+#         final_output = x.new_zeros(x.shape)
+#         capacity = int(self.capacity_factor * len(x) / self.n_experts)
+        
+#         # how many tokens are routed to ith expert
+#         counts = x.new_tensor([len(indexes_list[i]) for i in range(self.n_experts)])
+        
+#         dropped = []
+        
+#         if self.drop_tokens:
+#             for i in range(self.n_experts):
+#                 if len(indexes_list[i]) < capacity:
+#                     continue
                 
-                # drop tokens 
-                indexes_list[i] = indexes_list[i][torch.randperm(len(indexes_list[i]))]
+#                 # drop tokens 
+#                 indexes_list[i] = indexes_list[i][torch.randperm(len(indexes_list[i]))]
                 
-                dropped.append(indexes_list[i][capacity:])
-                indexes_list[i] = indexes_list[i][:capacity]
+#                 dropped.append(indexes_list[i][capacity:])
+#                 indexes_list[i] = indexes_list[i][:capacity]
         
-        # output = \sum_i E_i(x) * p_i
-        if self.is_scale_prob:
-            expert_output = [self.experts[i](x[indexes_list[i], :]) * route_prob[indexes_list[i], i] for i in range(self.n_experts)]
-        else:
-            expert_output = [self.experts[i](x[indexes_list[i], :])  for i in range(self.n_experts)]
+#         # output = \sum_i E_i(x) * p_i
+#         if self.is_scale_prob:
+#             # expert_output = [self.experts[i](x[indexes_list[i], :]) * route_prob[indexes_list[i], i] for i in range(self.n_experts)]
+#             expert_output = [self.experts[i](x[indexes_list[i], :]) * route_prob_topk_norm[indexes_list[i], i] for i in range(self.n_experts)]
+#         else:
+#             expert_output = [self.experts[i](x[indexes_list[i], :])  for i in range(self.n_experts)]
         
-        for i in range(self.n_experts):
-            final_output[indexes_list[i], :] += expert_output[i]
+#         for i in range(self.n_experts):
+#             final_output[indexes_list[i], :] += expert_output[i]
         
-        if dropped:
-            dropped = torch.cat(dropped)
-            final_output[dropped, :] = x[dropped, :]
+#         if dropped:
+#             dropped = torch.cat(dropped)
+#             final_output[dropped, :] = x[dropped, :]
         
-        # if self.is_scale_prob:
-        #     final_output = final_output * route_prob_max.contiguous().view(-1, 1)
-        # else:
-        #     final_output = final_output * (route_prob_max / route_prob_max.detach()).contiguous().view(-1, 1)
-        assert final_output.shape == (batch_size * N, d)
-        final_output = final_output.contiguous().view(batch_size, N, d)
+#         # if self.is_scale_prob:
+#         #     final_output = final_output * route_prob_max.contiguous().view(-1, 1)
+#         # else:
+#         #     final_output = final_output * (route_prob_max / route_prob_max.detach()).contiguous().view(-1, 1)
+#         assert final_output.shape == (batch_size * N, d)
+#         final_output = final_output.contiguous().view(batch_size, N, d)
         
-        if not self.use_balancing_loss:
-            return final_output
-        return final_output, counts, route_prob.sum(0), len(dropped), None
+#         if not self.use_balancing_loss:
+#             return final_output
+#         return final_output, counts, route_prob.sum(0), len(dropped), None
 
 class ECSwitchLinear(SwitchLinear):
     def __init__(self, mm_hidden_size, channels, n_experts, capacity_factor=2, drop_tokens=True, is_scale_prob=True):
@@ -192,12 +258,12 @@ class Qformer(nn.Module):
     def __init__(self, in_channels, out_channels, num_query_token=32, cross_attention_freq=2, qformer_text_input=True,
                  max_txt_len=128, qformer_use_pretrained=False):
         super(Qformer, self).__init__()
-        bert_channel = 768
-        self.in_proj = nn.Linear(
-            in_channels, bert_channel
-        )
+        # bert_channel = 768
+        # self.in_proj = nn.Linear(
+        #     in_channels, bert_channel
+        # )
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
-        encoder_config.encoder_width = bert_channel
+        encoder_config.encoder_width = in_channels
         encoder_config.n_experts = 0
         # insert cross-attention layer every other block
         encoder_config.add_cross_attention = True
@@ -238,7 +304,7 @@ class Qformer(nn.Module):
         
     def forward(self, image_features, text=None):
         image_atts = torch.ones(image_features.size()[:-1], dtype=torch.long).to(image_features.device)
-        image_features = self.in_proj(image_features)
+        # image_features = self.in_proj(image_features)
         query_tokens = self.query_tokens.expand(image_features.shape[0], -1, -1)
         if self.qformer_text_input:
             text_Qformer = self.tokenizer(
@@ -276,8 +342,8 @@ class MoEQformer(Qformer):
                  drop_tokens=True, capacity_factor=1.5):
         super().__init__(in_channels, out_channels, num_query_token, cross_attention_freq, qformer_text_input, max_txt_len)
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
-        bert_channel = 768
-        encoder_config.encoder_width = bert_channel
+        # bert_channel = 768
+        # encoder_config.encoder_width = bert_channel
         # insert cross-attention layer every other block
         encoder_config.add_cross_attention = True
         encoder_config.drop_tokens=drop_tokens
@@ -377,7 +443,7 @@ class MoEQformer(Qformer):
                 
     def forward(self, image_features, text=None):
         image_atts = torch.ones(image_features.size()[:-1], dtype=torch.long).to(image_features.device)
-        image_features = self.in_proj(image_features)
+        # image_features = self.in_proj(image_features)
         query_tokens = self.query_tokens.expand(image_features.shape[0], -1, -1)
         if self.qformer_text_input:
             text_Qformer = self.tokenizer(

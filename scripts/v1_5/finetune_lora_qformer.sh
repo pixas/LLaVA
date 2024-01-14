@@ -1,47 +1,20 @@
 #!/bin/bash
 
-#SBATCH -J FT-qformer-llava7b
-#SBATCH --partition=x090
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:8  
-#SBATCH --cpus-per-task=32
-#SBATCH --ntasks-per-node=1    
-#SBATCH --mem=128G
-#SBATCH --output=logs/llava7b_qformer_loratune2.out
-###SBATCH --kill-on-bad-exit=1
-
-nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
-nodes_array=($nodes)
-head_node=${nodes_array[0]}
-head_node_ip=$(srun --nodes=1 --ntasks=1 -w "$head_node" hostname --ip-address)
-
-GPUS_PER_NODE=8
-NNODES=$SLURM_NNODES
-
-echo Node IP: $head_node_ip nodes_array: $nodes_array
-srun bash -c 'echo $SLURMD_NODENAME-$SLURM_JOB_GPUS' # 打印出不同机器上分配的显卡编号
-
-export LOGLEVEL=INFO
-export NCCL_DEBUG=ERROR
-export NCCL_SOCKET_IFNAME="eth0"
-export MASTER_PORT=29566
-
-srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
-    --nproc_per_node $GPUS_PER_NODE \
-    --nnodes $NNODES \
-    --rdzv_id $MASTER_PORT --rdzv_backend c10d --rdzv_endpoint $head_node_ip:$MASTER_PORT \
-    --node_rank $SLURM_PROCID \
+python -u -m torch.distributed.run \
+    --nproc_per_node 4 \
+    --nnodes 1 \
+    --rdzv_id 29566 --rdzv_backend c10d --rdzv_endpoint localhost:29566 \
     llava/train/train_mem.py \
     --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --deepspeed ./scripts/zero3.json \
-    --model_name_or_path /remote-home/share/models/vicuna-7b-v1.5 \
+    --model_name_or_path /remote-home/yushengliao/syjiang/checkpoints/vicuna-7b-v1.5 \
     --version v1 \
     --data_path ./playground/data/llava_v1_5_mix665k_clean.json \
     --image_folder ./playground/data \
     --vision_tower openai/clip-vit-large-patch14-336 \
-    --pretrain_mm_mlp_adapter /remote-home/syjiang/checkpoints/llava-v1.5-7b-pretrain-qformer-5e4_256q/mm_projector.bin \
+    --pretrain_mm_mlp_adapter /remote-home/yushengliao/syjiang/checkpoints/llava-v1.5-7b-pretrain-qformer/mm_projector.bin \
     --mm_projector_type qformer \
-    --qformer_query_tokens 256 \
+    --qformer_query_tokens 32 \
     --qformer_text_input True \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end False \
@@ -49,14 +22,14 @@ srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
     --image_aspect_ratio pad \
     --group_by_modality_length True \
     --bf16 True \
-    --output_dir /remote-home/syjiang/checkpoints/llava-v1.5-7b-qformer-lora-q256 \
+    --output_dir /remote-home/yushengliao/syjiang/checkpoints/llava-v1.5-7b-qformer-lora \
     --num_train_epochs 1 \
     --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 4 \
+    --per_device_eval_batch_size 4 \
+    --gradient_accumulation_steps 8 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 1000 \
+    --save_steps 500 \
     --save_total_limit 1 \
     --learning_rate 2e-4 \
     --weight_decay 0. \

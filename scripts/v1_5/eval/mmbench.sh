@@ -1,10 +1,10 @@
 #!/bin/bash
 
 SPLIT="mmbench_dev_20230712"
-CKPT="llava-v1.5-7b-qformer-lora2"
+CKPT="$1"
 python -m llava.eval.model_vqa_mmbench \
-    --model-path /remote-home/syjiang/checkpoints/$CKPT \
-    --model-base /remote-home/share/models/vicuna-7b-v1.5 \
+    --model-path /remote-home/yushengliao/syjiang/checkpoints/$CKPT \
+    --model-base /remote-home/yushengliao/syjiang/checkpoints/vicuna-7b-v1.5 \
     --question-file ./playground/data/eval/mmbench/$SPLIT.tsv \
     --answers-file ./playground/data/eval/mmbench/answers/$SPLIT/${CKPT}_llava_v1.jsonl \
     --single-pred-prompt \
