@@ -941,7 +941,7 @@ def train():
             )
         else:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
-            moe_config = MoELlavaConfig(**config.to_dict())
+            moe_config = UniMoELlavaConfig(**config.to_dict())
             moe_config.moe_layer_index = model_args.moe_layer_index 
             moe_config.num_experts = model_args.num_experts 
             moe_config.num_experts_per_token = model_args.num_experts_per_token
@@ -959,13 +959,13 @@ def train():
                 if each_ckpt.endswith(".bin"):
                     ckpt.update(torch.load(os.path.join(model_args.model_name_or_path, each_ckpt), map_location='cpu'))
             # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
-            model_state_dict = set(list(MoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
+            model_state_dict = set(list(UniMoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
             
             if model_args.is_eff_moe:
                 new_state_dict = convert_eff_state_dict(model_state_dict, ckpt, model_args.num_experts)
             else:
                 new_state_dict = convert_state_dict(model_state_dict, ckpt, model_args.num_experts)
-            model = MoELlavaLlamaForCausalLM.from_pretrained(
+            model = UniMoELlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 config=moe_config,
                 cache_dir=training_args.cache_dir,
