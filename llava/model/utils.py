@@ -69,7 +69,10 @@ def is_dist_avail_and_initialized():
         return False
     return True
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
 def convert_state_dict(current_state_dict, state_dict, num_experts, prefix='model.'):
     new_state_dict = {}
     print("Begin to load state dict")
@@ -98,4 +101,46 @@ def convert_state_dict(current_state_dict, state_dict, num_experts, prefix='mode
                 new_state_dict[name] = param
         else:
             new_state_dict[name] = param
+<<<<<<< HEAD
+=======
+    return new_state_dict
+
+
+def convert_eff_state_dict(current_state_dict, state_dict, num_experts, prefix='model.'):
+    new_state_dict = {}
+    print("Begin to load state dict")
+    
+
+    # for any param in `state_dict` that begins with layers.{index}.mlp, initialize it to 
+    # layers.{index}.mlp.experts.{expert_index}.param if it exists
+    # for example, if layers.0.mlp.experts.0.{param_name} exists, then layers.0.mlp.{param_name} is initialized to layers.0.mlp.experts.0.{param_name}
+    # please supplement the code below
+    assert num_experts == 4 or num_experts == 8
+    
+    for name, param in state_dict.items():
+        # Check if the parameter belongs to an MoE layer
+        if name.startswith(prefix + "layers.") and ".mlp." in name:
+            layer_index = int(name.split('.')[2])
+            param_name = name.split('.mlp.')[1]
+
+            # Find the corresponding MoE parameter
+
+            moe_param_name = f"layers.{layer_index}.mlp.experts.0.{param_name}"
+            if prefix + moe_param_name in current_state_dict:
+
+                for expert_index in range(num_experts):
+                    moe_param_name = prefix + f"layers.{layer_index}.mlp.experts.{expert_index}.{param_name}"
+                    if "down_proj" in param_name:
+                        each_dim = param.shape[1] // num_experts
+                        new_param = param[:, each_dim * expert_index: each_dim * (expert_index + 1)]
+                    else:
+                        each_dim = param.shape[0] // num_experts
+                        new_param = param[each_dim * expert_index: each_dim * (expert_index + 1)]
+                    new_state_dict[moe_param_name] = new_param
+
+            else:
+                new_state_dict[name] = param
+        else:
+            new_state_dict[name] = param
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
     return new_state_dict

@@ -32,7 +32,11 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
 from llava.model import *
+<<<<<<< HEAD
 from llava.model.utils import convert_state_dict
+=======
+from llava.model.utils import convert_state_dict, convert_eff_state_dict
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
 from llava.mm_utils import tokenizer_image_token
 from llava.model.multimodal_projector.builder import Qformer, GatedLinear
 from PIL import Image
@@ -72,6 +76,10 @@ class ModelArguments:
     num_experts: Optional[int] = field(default=4)
     num_experts_per_token: Optional[int] = field(default=2)
     moe_layer_index: Optional[int] = field(default=-1)
+<<<<<<< HEAD
+=======
+    is_eff_moe: Optional[bool] = field(default=False)
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
     
     qformer_text_input: Optional[bool] = field(default=False)
     qformer_use_pretrained: Optional[bool] = field(default=False)
@@ -946,6 +954,14 @@ def train():
             moe_config.num_experts_per_token = model_args.num_experts_per_token
             moe_config.is_sparse = model_args.is_moe_sparse
             moe_config.architectures = ["MoELLamaForCausalLM"]
+<<<<<<< HEAD
+=======
+            if model_args.is_eff_moe:
+                moe_config.intermediate_size = moe_config.intermediate_size // moe_config.num_experts
+                moe_config.moe_layer_index = -1
+                rank0_print("Using Efficient MoE")
+                
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
             rank0_print(moe_config)
 
             ckpt = {}
@@ -955,8 +971,15 @@ def train():
             # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
             model_state_dict = set(list(MoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
             
+<<<<<<< HEAD
                 
             new_state_dict = convert_state_dict(model_state_dict, ckpt, model_args.num_experts)
+=======
+            if model_args.is_eff_moe:
+                new_state_dict = convert_eff_state_dict(model_state_dict, ckpt, model_args.num_experts)
+            else:
+                new_state_dict = convert_state_dict(model_state_dict, ckpt, model_args.num_experts)
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
             model = MoELlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 config=moe_config,
@@ -964,6 +987,10 @@ def train():
                 state_dict=new_state_dict,
                 **bnb_model_from_pretrained_args
             )
+<<<<<<< HEAD
+=======
+            rank0_print(model)
+>>>>>>> a64d62495c5a9e8f95ffd40d657997c45f294f53
             # model = LlavaLlamaForCausalLM.from_pretrained(
             #     model_args.model_name_or_path,
             #     cache_dir=training_args.cache_dir,
