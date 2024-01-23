@@ -32,6 +32,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
 from llava.model import *
+from llava.model.utils import convert_state_dict
 from llava.mm_utils import tokenizer_image_token
 from llava.model.multimodal_projector.builder import Qformer, GatedLinear
 from PIL import Image
@@ -67,8 +68,11 @@ class ModelArguments:
     pretrain_mm_mlp_adapter: Optional[str] = field(default=None)
     mm_projector_type: Optional[str] = field(default='mlp2x_gelu')
     mm_projector_gates: Optional[int] = field(default=1)
-    mm_projector_experts: Optional[int] = field(default=4)
-    mm_num_experts_per_token: Optional[int] = field(default=2)
+    is_moe_sparse: Optional[bool] = field(default=True)
+    num_experts: Optional[int] = field(default=4)
+    num_experts_per_token: Optional[int] = field(default=2)
+    moe_layer_index: Optional[int] = field(default=-1)
+    
     qformer_text_input: Optional[bool] = field(default=False)
     qformer_use_pretrained: Optional[bool] = field(default=False)
     qformer_query_tokens: Optional[int] = field(default=32)
@@ -146,7 +150,7 @@ def merge_lora(model_path, **kwargs):
     if 'lora' in model_path.lower() and model_base is not None:
         lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
         print('Loading Share4V from base model...')
-        model = LlavaLlamaForCausalLM.from_pretrained(
+        model = MoELlavaLlamaForCausalLM.from_pretrained(
             model_base, config=lora_cfg_pretrained, **kwargs)
         token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
         if model.lm_head.weight.shape[0] != token_num:
@@ -896,6 +900,7 @@ def unlock_vit(training_args, model_args, vision_tower):
         else:
             p.requires_grad = True
 
+
 def train():
     global local_rank
 
@@ -934,11 +939,38 @@ def train():
                 **bnb_model_from_pretrained_args
             )
         else:
-            model = LlavaLlamaForCausalLM.from_pretrained(
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+            moe_config = MoELlavaConfig(**config.to_dict())
+            moe_config.moe_layer_index = model_args.moe_layer_index 
+            moe_config.num_experts = model_args.num_experts 
+            moe_config.num_experts_per_token = model_args.num_experts_per_token
+            moe_config.is_sparse = model_args.is_moe_sparse
+            moe_config.architectures = ["MoELLamaForCausalLM"]
+            rank0_print(moe_config)
+
+            ckpt = {}
+            for each_ckpt in os.listdir(model_args.model_name_or_path):
+                if each_ckpt.endswith(".bin"):
+                    ckpt.update(torch.load(os.path.join(model_args.model_name_or_path, each_ckpt), map_location='cpu'))
+            # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
+            model_state_dict = set(list(MoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
+            
+                
+            new_state_dict = convert_state_dict(model_state_dict, ckpt, model_args.num_experts)
+            model = MoELlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
+                config=moe_config,
                 cache_dir=training_args.cache_dir,
+                state_dict=new_state_dict,
                 **bnb_model_from_pretrained_args
             )
+            # model = LlavaLlamaForCausalLM.from_pretrained(
+            #     model_args.model_name_or_path,
+            #     cache_dir=training_args.cache_dir,
+            #     **bnb_model_from_pretrained_args
+            # )
+
+            
     else:
         model = transformers.LlamaForCausalLM.from_pretrained(
             model_args.model_name_or_path,
@@ -1110,6 +1142,7 @@ def train():
                     tokenizer=tokenizer,
                     args=training_args,
                     **data_module)
+
 
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)

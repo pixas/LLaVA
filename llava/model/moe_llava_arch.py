@@ -25,10 +25,10 @@ from llava.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_PATCH
 from llava.model.multimodal_projector.builder import Qformer
 
 
-class LlavaMetaModel:
+class MoELlavaMetaModel:
 
     def __init__(self, config):
-        super(LlavaMetaModel, self).__init__(config)
+        super(MoELlavaMetaModel, self).__init__(config)
 
         if hasattr(config, "mm_vision_tower"):
             self.vision_tower = build_vision_tower(config, delay_load=True)
@@ -48,13 +48,12 @@ class LlavaMetaModel:
         mm_vision_select_layer = model_args.mm_vision_select_layer
         mm_vision_select_feature = model_args.mm_vision_select_feature
         pretrain_mm_mlp_adapter = model_args.pretrain_mm_mlp_adapter
-        mm_projector_gates = getattr(model_args, "mm_projector_gates", None)
-        mm_projector_experts = getattr(model_args, "mm_projector_experts", None)
+
         qformer_text_input = model_args.qformer_text_input
         qformer_use_pretrained = model_args.qformer_use_pretrained
         qformer_query_tokens = model_args.qformer_query_tokens
         self.config.mm_vision_tower = vision_tower
-        num_experts_per_token = getattr(model_args, "mm_num_experts_per_token", None)
+        # num_experts_per_token = model_args.num_experts_per_token
 
         if self.get_vision_tower() is None:
             vision_tower = build_vision_tower(model_args)
@@ -75,12 +74,11 @@ class LlavaMetaModel:
         self.config.mm_hidden_size = vision_tower.hidden_size
         self.config.mm_vision_select_layer = mm_vision_select_layer
         self.config.mm_vision_select_feature = mm_vision_select_feature
-        self.config.mm_projector_gates = mm_projector_gates
-        self.config.mm_projector_experts = mm_projector_experts
+
         self.config.qformer_text_input = qformer_text_input
         self.config.qformer_use_pretrained = qformer_use_pretrained
         self.config.qformer_query_tokens = qformer_query_tokens
-        self.config.num_experts_per_token = num_experts_per_token
+
     
         
         if getattr(self, 'mm_projector', None) is None:
@@ -96,7 +94,7 @@ class LlavaMetaModel:
                 return {k.split(keyword + '.')[1]: v for k, v in weights.items() if keyword in k}
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'), strict=False)
 
-class LlavaMetaForCausalLM(ABC):
+class MoELlavaMetaForCausalLM(ABC):
 
     @abstractmethod
     def get_model(self):
