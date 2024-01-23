@@ -25,16 +25,22 @@ from transformers import AutoConfig, AutoModelForCausalLM, \
 
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer, LlamaMLP
 
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
+from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast, ModelOutput, dataclass
 
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
 
-
-class MoEBaseModelOutputWithPast(BaseModelOutputWithPast):
+@dataclass
+class MoEBaseModelOutputWithPast(ModelOutput):
+    last_hidden_state: torch.FloatTensor = None
+    past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    attentions: Optional[Tuple[torch.FloatTensor]] = None
     lbl_loss: list = None
+
+
 
 class MoELlamaConfig(LlamaConfig):
     model_type = "moe_llama"
