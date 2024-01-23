@@ -89,7 +89,7 @@ class MoELLamaMLP(nn.Module):
         topK_indices = topK_indices.flatten()
         topK_scores = topK_scores.flatten()  # [bs * N * expert]
         # the batch indexes for those chosen experts
-        batch_indices = torch.arange(batch_size).to(x).repeat_interleave(num_selects)  # [bs * N * select]
+        batch_indices = torch.arange(batch_size).to(x.device).repeat_interleave(num_selects)  # [bs * N * select]
         # generate the expert indexes based on the expert order in ascending order
         _, index_sorted_topK_indices = topK_indices.sort(0)
         
@@ -105,7 +105,7 @@ class MoELLamaMLP(nn.Module):
         """各专家分别正向传播"""  # 此处应该有并行优化的空间 (如果单次forward不足以占满显卡利用率)
         # args = [(split_x[i], i) for i in range(self.num_experts) if split_x[i].shape[0] > 0]
         # expert_outputs = self.experts_vmap(args)
-        expert_outputs = [self.experts(split_x[i], i) for i in range(self.num_experts) if split_x[i].shape[0] > 0]
+        expert_outputs = [self.experts[i](split_x[i]) for i in range(self.num_experts) if split_x[i].shape[0] > 0]
 
         """重组各个专家的输出，并进行加权"""
         # (bsz*seq_len*num_selects, hidden_size)
