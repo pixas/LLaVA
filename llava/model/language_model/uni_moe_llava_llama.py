@@ -25,16 +25,21 @@ from transformers import AutoConfig, AutoModelForCausalLM, \
 
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer, LlamaMLP
 
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
+from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast, ModelOutput, dataclass
 
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
 
 logger = logging.get_logger(__name__)
 
-
-class UniMoEBaseModelOutputWithPast(BaseModelOutputWithPast):
+@dataclass
+class UniMoEBaseModelOutputWithPast(ModelOutput):
+    last_hidden_state: torch.FloatTensor = None
+    past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    attentions: Optional[Tuple[torch.FloatTensor]] = None
     lbl_loss: list = None
+
 
 class UniMoELlamaConfig(LlamaConfig):
     model_type = "unimoe_llama"
@@ -422,9 +427,9 @@ class UniMoELlavaLlamaForCausalLM(UniMoELlamaForCausalLM, MoELlavaMetaForCausalL
             # Enable model/pipeline parallelism
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
-            if getattr(outputs, "lbl_loss", None) is not None:
-                lbl_loss = outputs.lbl_loss
-                loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
+            # if getattr(outputs, "lbl_loss", None) is not None:
+            #     lbl_loss = outputs.lbl_loss
+            #     loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
                 
             if expert_info is not None:
                 counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())

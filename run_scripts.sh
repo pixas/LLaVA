@@ -55,11 +55,11 @@ monitor_and_execute() {
             # 结束监测
             break
         else
-            echo "未满足条件，等待5分钟后重新检查..."
+            echo "未满足条件，等待1分钟后重新检查..."
         fi
 
-        # 每5分钟检查一次
-        sleep 300
+        # 每1分钟检查一次
+        sleep 60
     done
 }
 
