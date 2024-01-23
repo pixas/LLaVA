@@ -946,7 +946,7 @@ def train():
             moe_config.num_experts = model_args.num_experts 
             moe_config.num_experts_per_token = model_args.num_experts_per_token
             moe_config.is_sparse = model_args.is_moe_sparse
-            moe_config.architectures = ["MoELLamaForCausalLM"]
+            moe_config.architectures = ["UniMoELLamaForCausalLM"]
             if model_args.is_eff_moe:
                 moe_config.intermediate_size = moe_config.intermediate_size // moe_config.num_experts
                 moe_config.moe_layer_index = -1

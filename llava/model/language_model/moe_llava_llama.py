@@ -423,9 +423,9 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
             # Enable model/pipeline parallelism
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
-            if getattr(outputs, "lbl_loss", None) is not None:
-                lbl_loss = outputs.lbl_loss
-                loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
+            # if getattr(outputs, "lbl_loss", None) is not None:
+            #     lbl_loss = outputs.lbl_loss
+            #     loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
                 
             if expert_info is not None:
                 counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())
