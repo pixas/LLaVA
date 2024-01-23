@@ -1,36 +1,22 @@
-# from llava.model.builder import load_pretrained_model
+# from llava.model.utils import convert_state_dict
+# import torch 
 # import os 
-# model_path="~/.cache/huggingface/hub/models--liuhaotian--llava-v1.5-7b"
-# model_base=None
-# model_name="llava"
-# model_path = os.path.expanduser(model_path)
+# model_name_or_path = "/remote-home/share/models/vicuna-7b-v1.5"
+# ckpt = {}
+# for each_ckpt in os.listdir(model_name_or_path):
+#     if each_ckpt.endswith(".bin"):
+#         ckpt.update(torch.load(os.path.join(model_name_or_path, each_ckpt), map_location='cpu'))
 
-# tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, model_base, model_name, load_8bit=False, load_4bit=False, device_map="auto", device="cuda")
-
-# for each in model.named_parameters():
-#     if "vision_tower" in each[0]:
-#         continue
-#     print(each[0], each[1].shape)
-import json 
-import os 
-from tqdm import tqdm
-
-path = os.path.expanduser("/remote-home/syjiang/datasets/share_gpt4v/sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k.json")
-with open(path, 'r') as f:
-    data = json.load(f)
-
-image_folder = "/remote-home/syjiang/datasets/share_gpt4v"
-image_prefix = set()
-for i in tqdm(data):
-    # print(i)
-    if 'image' in i:
-        image_path = os.path.join(image_folder, i['image'])
-        # try to open the image with PIL
-        try:
-            with open(image_path, 'rb') as f:
-                pass
-        except:
-            print(image_path)
-            exit()
-
-# print(image_prefix)
+# for key, value in ckpt.items():
+#     # print(key)
+#     # print(value.shape)
+#     # print(value.dtype)
+#     # print("===")
+#     print(key, value.shape, value.dtype)
+import torch
+ 
+input = torch.tensor([1, 2, 2, 3, 3, 3, 4, 4, 4, 4])
+counts = torch.bincount(input)
+ 
+print(counts)  # 输出: tensor([0, 1, 2, 3, 4])
+print(torch.bincount(input, minlength=2))

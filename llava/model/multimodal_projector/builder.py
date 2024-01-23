@@ -256,14 +256,14 @@ class ECSwitchLinear(SwitchLinear):
 
 class Qformer(nn.Module):
     def __init__(self, in_channels, out_channels, num_query_token=32, cross_attention_freq=2, qformer_text_input=True,
-                 max_txt_len=128, qformer_use_pretrained=False):
+                 max_txt_len=128, qformer_use_pretrained=False, qformer_blip_pretrain_path="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth"):
         super(Qformer, self).__init__()
-        # bert_channel = 768
-        # self.in_proj = nn.Linear(
-        #     in_channels, bert_channel
-        # )
+        bert_channel = 1408
+        self.in_proj = nn.Linear(
+            in_channels, bert_channel
+        )
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
-        encoder_config.encoder_width = in_channels
+        encoder_config.encoder_width = bert_channel
         encoder_config.n_experts = 0
         # insert cross-attention layer every other block
         encoder_config.add_cross_attention = True
@@ -271,12 +271,19 @@ class Qformer(nn.Module):
         encoder_config.query_length = num_query_token
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", truncation_side="left")
         self.tokenizer.add_special_tokens({"bos_token": "[DEC]"})
-        if qformer_use_pretrained:
-            self.Qformer = BertLMHeadModel.from_pretrained(
-                "bert-base-uncased", config=encoder_config
-            )
-        else:
+
+        if qformer_blip_pretrain_path is not None:
             self.Qformer = BertLMHeadModel(config=encoder_config)
+            pretrained_Qformer_state_dict = self.load_from_url(qformer_blip_pretrain_path)
+            msg = self.load_state_dict(pretrained_Qformer_state_dict, strict=False)
+            print(msg)
+        else:
+            if qformer_use_pretrained:
+                self.Qformer = BertLMHeadModel.from_pretrained(
+                    "bert-base-uncased", config=encoder_config
+                )
+            else:
+                self.Qformer = BertLMHeadModel(config=encoder_config)
         # self.Qformer.bert.embeddings.position_ids=None
         # for name, param in self.Qformer.named_parameters():
         #     print(name, param.shape, param)
@@ -304,7 +311,7 @@ class Qformer(nn.Module):
         
     def forward(self, image_features, text=None):
         image_atts = torch.ones(image_features.size()[:-1], dtype=torch.long).to(image_features.device)
-        # image_features = self.in_proj(image_features)
+        image_features = self.in_proj(image_features)
         query_tokens = self.query_tokens.expand(image_features.shape[0], -1, -1)
         if self.qformer_text_input:
             text_Qformer = self.tokenizer(
@@ -336,6 +343,27 @@ class Qformer(nn.Module):
         query_output = query_output['bert_output']
         inputs_llm = self.llm_proj(query_output.last_hidden_state[:,:self.query_tokens.size(1),:])
         return inputs_llm
+    
+    def load_from_url(self, url_or_filename="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth"):
+        if is_url(url_or_filename):
+            cached_file = download_cached_file(
+                url_or_filename, check_hash=False, progress=True
+            )
+            checkpoint = torch.load(cached_file, map_location="cpu")
+        elif os.path.isfile(url_or_filename):
+            checkpoint = torch.load(url_or_filename, map_location="cpu")
+        else:
+            raise RuntimeError("checkpoint url or path is invalid")
+
+        state_dict = checkpoint["model"]
+
+        # msg = self.load_state_dict(state_dict, strict=False)
+
+        # # logging.info("Missing keys {}".format(msg.missing_keys))
+        # logging.info("load checkpoint from %s" % url_or_filename)
+
+        # return msg
+        return state_dict
 
 class MoEQformer(Qformer):
     def __init__(self, in_channels, out_channels, num_query_token=32, cross_attention_freq=2, qformer_text_input=True, max_txt_len=128, qformer_use_pretrained=False, n_experts=4,
@@ -383,26 +411,7 @@ class MoEQformer(Qformer):
         #     self.Qformer = BertLMHeadModel(config=encoder_config)
         # self.Qformer = BertLMHeadModel(config=encoder_config)
     
-    def load_from_url(self, url_or_filename="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth"):
-        if is_url(url_or_filename):
-            cached_file = download_cached_file(
-                url_or_filename, check_hash=False, progress=True
-            )
-            checkpoint = torch.load(cached_file, map_location="cpu")
-        elif os.path.isfile(url_or_filename):
-            checkpoint = torch.load(url_or_filename, map_location="cpu")
-        else:
-            raise RuntimeError("checkpoint url or path is invalid")
-
-        state_dict = checkpoint["model"]
-
-        # msg = self.load_state_dict(state_dict, strict=False)
-
-        # # logging.info("Missing keys {}".format(msg.missing_keys))
-        # logging.info("load checkpoint from %s" % url_or_filename)
-
-        # return msg
-        return state_dict
+    
     
     def create_param_mapping(self, cur_state_dict, pretrained_state_dict, layer=12):
         cur_keys = list(cur_state_dict.keys())
