@@ -1,2 +1,371 @@
 Node IP: 10.0.1.38 nodes_array: x090-1
 x090-1-0,1,2,3
+master_addr is only used for static rdzv_backend and when rdzv_endpoint is not specified.
+WARNING:__main__:
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+INFO:torch.distributed.launcher.api:Starting elastic_operator with launch configs:
+  entrypoint       : llava/train/train_mem_moe.py
+  min_nodes        : 1
+  max_nodes        : 1
+  nproc_per_node   : 4
+  run_id           : 29550
+  rdzv_backend     : c10d
+  rdzv_endpoint    : 10.0.1.38:29550
+  rdzv_configs     : {'timeout': 900}
+  max_restarts     : 0
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+INFO:torch.distributed.elastic.agent.server.local_elastic_agent:log directory set to: /tmp/torchelastic_s3so7780/29550_pjhzhqm_
+INFO:torch.distributed.elastic.agent.server.api:[default] starting workers for entrypoint: python
+INFO:torch.distributed.elastic.agent.server.api:[default] Rendezvous'ing worker group
+INFO:torch.distributed.elastic.agent.server.api:[default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=x090-1
+  master_port=37047
+  group_rank=0
+  group_world_size=1
+  local_ranks=[0, 1, 2, 3]
+  role_ranks=[0, 1, 2, 3]
+  global_ranks=[0, 1, 2, 3]
+  role_world_sizes=[4, 4, 4, 4]
+  global_world_sizes=[4, 4, 4, 4]
+
+INFO:torch.distributed.elastic.agent.server.api:[default] Starting worker group
+INFO:torch.distributed.elastic.agent.server.local_elastic_agent:Environment variable 'TORCHELASTIC_ENABLE_FILE_TIMER' not found. Do not start FileTimerServer.
+INFO:torch.distributed.elastic.multiprocessing:Setting worker0 reply file to: /tmp/torchelastic_s3so7780/29550_pjhzhqm_/attempt_0/0/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker1 reply file to: /tmp/torchelastic_s3so7780/29550_pjhzhqm_/attempt_0/1/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker2 reply file to: /tmp/torchelastic_s3so7780/29550_pjhzhqm_/attempt_0/2/error.json
+INFO:torch.distributed.elastic.multiprocessing:Setting worker3 reply file to: /tmp/torchelastic_s3so7780/29550_pjhzhqm_/attempt_0/3/error.json
+[2024-01-23 22:30:07,770] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2024-01-23 22:30:07,770] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2024-01-23 22:30:07,770] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2024-01-23 22:30:07,770] [INFO] [real_accelerator.py:110:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+[2024-01-23 22:30:39,995] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2024-01-23 22:30:39,995] [INFO] [comm.py:594:init_distributed] cdb=None
+[2024-01-23 22:30:39,995] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2024-01-23 22:30:39,995] [INFO] [comm.py:625:init_distributed] Initializing TorchBackend in DeepSpeed with backend nccl
+[2024-01-23 22:30:39,995] [INFO] [comm.py:594:init_distributed] cdb=None
+[2024-01-23 22:30:39,996] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2024-01-23 22:30:39,996] [WARNING] [comm.py:152:init_deepspeed_backend] NCCL backend in DeepSpeed not yet implemented
+[2024-01-23 22:30:39,996] [INFO] [comm.py:594:init_distributed] cdb=None
+[2024-01-23 22:30:39,996] [INFO] [comm.py:594:init_distributed] cdb=None
+Using Efficient MoE
+MoELlavaConfig {
+  "_name_or_path": "/remote-home/share/models/vicuna-7b-v1.5",
+  "architectures": [
+    "MoELLamaForCausalLM"
+  ],
+  "bos_token_id": 1,
+  "eos_token_id": 2,
+  "hidden_act": "silu",
+  "hidden_size": 4096,
+  "initializer_range": 0.02,
+  "intermediate_size": 1376,
+  "is_eff_moe": false,
+  "is_sparse": true,
+  "max_position_embeddings": 4096,
+  "model_type": "moe_llava",
+  "moe_layer_index": -1,
+  "num_attention_heads": 32,
+  "num_experts": 8,
+  "num_experts_per_token": 2,
+  "num_hidden_layers": 32,
+  "num_key_value_heads": 32,
+  "pad_token_id": 0,
+  "pretraining_tp": 1,
+  "rms_norm_eps": 1e-05,
+  "rope_scaling": null,
+  "tie_word_embeddings": false,
+  "torch_dtype": "float16",
+  "transformers_version": "4.31.0",
+  "use_cache": true,
+  "vocab_size": 32000
+}
+
+Begin to load state dict
+Begin to load state dict
+Begin to load state dict
+Begin to load state dict
+[2024-01-23 22:35:56,129] [INFO] [partition_parameters.py:453:__exit__] finished initializing model with 12.92B parameters
+MoELlavaLlamaForCausalLM(
+  (model): MoELlavaLlamaModel(
+    (embed_tokens): Embedding(32000, 4096, padding_idx=0)
+    (layers): ModuleList(
+      (0-31): 32 x MoELLamaDecoderLayer(
+        (self_attn): LlamaAttention(
+          (q_proj): Linear(in_features=4096, out_features=4096, bias=False)
+          (k_proj): Linear(in_features=4096, out_features=4096, bias=False)
+          (v_proj): Linear(in_features=4096, out_features=4096, bias=False)
+          (o_proj): Linear(in_features=4096, out_features=4096, bias=False)
+          (rotary_emb): LlamaRotaryEmbedding()
+        )
+        (mlp): MoELLamaMLP(
+          (experts): ModuleList(
+            (0-7): 8 x LlamaMLP(
+              (gate_proj): Linear(in_features=4096, out_features=1376, bias=False)
+              (up_proj): Linear(in_features=4096, out_features=1376, bias=False)
+              (down_proj): Linear(in_features=1376, out_features=4096, bias=False)
+              (act_fn): SiLUActivation()
+            )
+          )
+          (switch): Linear(in_features=4096, out_features=8, bias=True)
+        )
+        (input_layernorm): LlamaRMSNorm()
+        (post_attention_layernorm): LlamaRMSNorm()
+      )
+    )
+    (norm): LlamaRMSNorm()
+  )
+  (lm_head): Linear(in_features=4096, out_features=32000, bias=False)
+)
+Adding LoRA adapters...
+[2024-01-23 22:37:53,232] [WARNING] [partition_parameters.py:836:_post_init_method] param `class_embedding` in CLIPVisionEmbeddings not on GPU so was not broadcasted from rank 0
+[2024-01-23 22:37:53,474] [INFO] [partition_parameters.py:453:__exit__] finished initializing model with 13.22B parameters
+Formatting inputs...Skip in lazy mode
+Parameter Offload: Total persistent parameters: 1647872 in 376 params
+wandb: Currently logged in as: jiangshuyang0. Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.16.2 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.15.10
+wandb: Run data is saved locally in /remote-home/syjiang/repo/LLaVA/wandb/run-20240123_223855-gedjzylp
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run playful-snowflake-113
+wandb: ⭐️ View project at https://wandb.ai/jiangshuyang0/huggingface
+wandb: 🚀 View run at https://wandb.ai/jiangshuyang0/huggingface/runs/gedjzylp
+  0%|          | 0/5197 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem_moe.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_moe.py", line 1159, in train
+    trainer.train()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1539, in train
+    return inner_training_loop(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1809, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2654, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2679, in compute_loss
+    outputs = model(**inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/utils/nvtx.py", line 15, in wrapped_fn
+    ret_val = func(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/runtime/engine.py", line 1735, in forward
+    loss = self.module(*inputs, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/peft/peft_model.py", line 922, in forward
+    return self.base_model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 394, in forward
+    outputs = self.model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 299, in forward
+    layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 249, in checkpoint
+    return CheckpointFunction.apply(function, preserve, *args)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/autograd/function.py", line 506, in apply
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem_moe.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_moe.py", line 1159, in train
+    trainer.train()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1539, in train
+    return inner_training_loop(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1809, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2654, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2679, in compute_loss
+    outputs = model(**inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/utils/nvtx.py", line 15, in wrapped_fn
+    ret_val = func(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/runtime/engine.py", line 1735, in forward
+    loss = self.module(*inputs, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/peft/peft_model.py", line 922, in forward
+    return self.base_model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 394, in forward
+    outputs = self.model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 299, in forward
+    layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 249, in checkpoint
+    return CheckpointFunction.apply(function, preserve, *args)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/autograd/function.py", line 506, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 107, in forward
+    outputs = run_function(*args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 295, in custom_forward
+Traceback (most recent call last):
+    return module(*inputs, output_attentions, None)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 107, in forward
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 200, in forward
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem_moe.py", line 13, in <module>
+    train()
+    outputs = run_function(*args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 295, in custom_forward
+      File "/remote-home/syjiang/repo/LLaVA/llava/train/train_moe.py", line 1159, in train
+    trainer.train()
+hidden_states = residual + hidden_states
+RuntimeError: The size of tensor a (1139) must match the size of tensor b (4556) at non-singleton dimension 1
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1539, in train
+    return inner_training_loop(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1809, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs)
+    return module(*inputs, output_attentions, None)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2654, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2679, in compute_loss
+    outputs = model(**inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/utils/nvtx.py", line 15, in wrapped_fn
+    ret_val = func(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/runtime/engine.py", line 1735, in forward
+    loss = self.module(*inputs, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/peft/peft_model.py", line 922, in forward
+    return self.base_model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 394, in forward
+    outputs = self.model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 299, in forward
+    layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 249, in checkpoint
+    return CheckpointFunction.apply(function, preserve, *args)
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/autograd/function.py", line 506, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 200, in forward
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 107, in forward
+    outputs = run_function(*args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 295, in custom_forward
+    return module(*inputs, output_attentions, None)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 200, in forward
+    hidden_states = residual + hidden_states
+RuntimeError: The size of tensor a (1293) must match the size of tensor b (5172) at non-singleton dimension 1
+    hidden_states = residual + hidden_states
+RuntimeError: The size of tensor a (1208) must match the size of tensor b (4832) at non-singleton dimension 1
+wandb: Waiting for W&B process to finish... (failed 1). Press Control-C to abort syncing.
+Traceback (most recent call last):
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_mem_moe.py", line 13, in <module>
+    train()
+  File "/remote-home/syjiang/repo/LLaVA/llava/train/train_moe.py", line 1159, in train
+    trainer.train()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1539, in train
+    return inner_training_loop(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 1809, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2654, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/transformers/trainer.py", line 2679, in compute_loss
+    outputs = model(**inputs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/utils/nvtx.py", line 15, in wrapped_fn
+    ret_val = func(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/deepspeed/runtime/engine.py", line 1735, in forward
+    loss = self.module(*inputs, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/peft/peft_model.py", line 922, in forward
+    return self.base_model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 394, in forward
+    outputs = self.model(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 299, in forward
+    layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 249, in checkpoint
+    return CheckpointFunction.apply(function, preserve, *args)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/autograd/function.py", line 506, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/utils/checkpoint.py", line 107, in forward
+    outputs = run_function(*args)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 295, in custom_forward
+    return module(*inputs, output_attentions, None)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1538, in _call_impl
+    result = forward_call(*args, **kwargs)
+  File "/remote-home/syjiang/repo/LLaVA/llava/model/language_model/moe_llava_llama.py", line 200, in forward
+    hidden_states = residual + hidden_states
+RuntimeError: The size of tensor a (1308) must match the size of tensor b (5232) at non-singleton dimension 1
+wandb: 🚀 View run playful-snowflake-113 at: https://wandb.ai/jiangshuyang0/huggingface/runs/gedjzylp
+wandb: ️⚡ View job at https://wandb.ai/jiangshuyang0/huggingface/jobs/QXJ0aWZhY3RDb2xsZWN0aW9uOjEzMzAxMjkzOQ==/version_details/v1
+wandb: Synced 6 W&B file(s), 0 media file(s), 2 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20240123_223855-gedjzylp/logs
+WARNING:torch.distributed.elastic.multiprocessing.api:Sending process 1004927 closing signal SIGTERM
+ERROR:torch.distributed.elastic.multiprocessing.api:failed (exitcode: 1) local_rank: 1 (pid: 1004928) of binary: /remote-home/syjiang/anaconda3/envs/llava/bin/python
+INFO:torch.distributed.elastic.agent.server.api:Local worker group finished (FAILED). Waiting 300 seconds for other agents to finish
+INFO:torch.distributed.elastic.agent.server.api:Done waiting for other agents. Elapsed: 0.0003426074981689453 seconds
+INFO:torch.distributed.elastic.multiprocessing.errors:local_rank 1 FAILED with no error file. Decorate your entrypoint fn with @record for traceback info. See: https://pytorch.org/docs/stable/elastic/errors.html
+Traceback (most recent call last):
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 798, in <module>
+    main()
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 346, in wrapper
+    return f(*args, **kwargs)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 794, in main
+    run(args)
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/run.py", line 785, in run
+    elastic_launch(
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 134, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/remote-home/syjiang/anaconda3/envs/llava/lib/python3.10/site-packages/torch/distributed/launcher/api.py", line 250, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+llava/train/train_mem_moe.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2024-01-23_22:40:03
+  host      : x090-1
+  rank      : 2 (local_rank: 2)
+  exitcode  : 1 (pid: 1004929)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+[2]:
+  time      : 2024-01-23_22:40:03
+  host      : x090-1
+  rank      : 3 (local_rank: 3)
+  exitcode  : 1 (pid: 1004930)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2024-01-23_22:40:03
+  host      : x090-1
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 1004928)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+srun: error: x090-1: task 0: Exited with exit code 1
