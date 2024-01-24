@@ -84,10 +84,13 @@ class UniMoELLamaMLP(nn.Module):
         # x = self.dropout(x)
         new_x = self.shared_expert(x)
         if self.is_sparse:
-            return self.fast_forward_sparse(x) + new_x
+            hidden_states, lbl_loss = self.fast_forward_sparse(x)
+            return hidden_states + new_x, lbl_loss
             # return self.forward_sparse(x) + new_x
         else:
-            return self.forward_dense(x) + new_x
+            hidden_states, lbl_loss = self.forward_dense(x)
+            return hidden_states + new_x, lbl_loss
+
         
     def fast_forward_sparse(self, x: torch.Tensor):
         bsz, N, d = x.shape 
@@ -125,6 +128,7 @@ class UniMoELLamaMLP(nn.Module):
         cat_expert_outputs = torch.mul(cat_expert_outputs, sorted_topK_scores.reshape(-1, 1) * self.score_scale_factor)  # 乘权重
         zeros = torch.zeros(batch_size, output_dim).to(x)
         y = zeros.index_add(0, sorted_batch_indices, cat_expert_outputs)
+        y = y.reshape(bsz, N, output_dim)
         return y, 0
         # if self.multiply_gate_scores:
         #     if self.mlp_norm is None:
