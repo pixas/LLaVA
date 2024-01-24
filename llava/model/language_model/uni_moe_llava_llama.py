@@ -29,7 +29,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutpu
 
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
-from copy import copy 
+from copy import copy
 
 logger = logging.get_logger(__name__)
 
@@ -84,10 +84,12 @@ class UniMoELLamaMLP(nn.Module):
         # x = self.dropout(x)
         new_x = self.shared_expert(x)
         if self.is_sparse:
-            return self.fast_forward_sparse(x) + new_x
+            hidden_states, lbl_loss = self.fast_forward_sparse(x)
+            return hidden_states + new_x, lbl_loss
             # return self.forward_sparse(x) + new_x
         else:
-            return self.forward_dense(x) + new_x
+            hidden_states, lbl_loss = self.forward_dense(x)
+            return hidden_states + new_x, lbl_loss
         
     def fast_forward_sparse(self, x: torch.Tensor):
         bsz, N, d = x.shape 

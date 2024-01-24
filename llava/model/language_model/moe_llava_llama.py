@@ -78,8 +78,8 @@ class MoELLamaMLP(nn.Module):
         # x = self.act(x)
         # x = self.dropout(x)
         if self.is_sparse:
-            return self.fast_forward_sparse(x)
-            # return self.forward_sparse(x)
+            # return self.fast_forward_sparse(x)
+            return self.forward_sparse(x)
         else:
             return self.forward_dense(x)
         
@@ -424,8 +424,9 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
             # if getattr(outputs, "lbl_loss", None) is not None:
-            #     lbl_loss = outputs.lbl_loss
-            #     loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
+            #     if outputs.lbl_loss [0] != 0:
+            #         lbl_loss = outputs.lbl_loss
+            #         loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
                 
             if expert_info is not None:
                 counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())

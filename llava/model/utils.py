@@ -157,7 +157,7 @@ def convert_uni_state_dict(current_state_dict, state_dict, num_experts, prefix='
             param_name = name.split('.mlp.')[1]
 
             # Find the corresponding MoE parameter
-            shared_param_name = f"layers.{layer_index}.shared_expert.{param_name}"
+            shared_param_name = f"model.layers.{layer_index}.mlp.shared_expert.{param_name}"
             new_state_dict[shared_param_name] = param
             moe_param_name = f"layers.{layer_index}.mlp.experts.0.{param_name}"
             if prefix + moe_param_name in current_state_dict:
