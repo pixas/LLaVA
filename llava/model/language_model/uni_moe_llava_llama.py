@@ -127,6 +127,7 @@ class UniMoELLamaMLP(nn.Module):
         cat_expert_outputs = torch.mul(cat_expert_outputs, sorted_topK_scores.reshape(-1, 1) * self.score_scale_factor)  # 乘权重
         zeros = torch.zeros(batch_size, output_dim).to(x)
         y = zeros.index_add(0, sorted_batch_indices, cat_expert_outputs)
+        y = y.reshape(bsz, N, output_dim)
         return y, 0
         # if self.multiply_gate_scores:
         #     if self.mlp_norm is None:

@@ -961,7 +961,11 @@ def train():
             # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
             model_state_dict = set(list(UniMoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
             new_state_dict = convert_uni_state_dict(model_state_dict, ckpt, model_args.num_experts)
-            
+            # for key, value in new_state_dict.items():
+            #     rank0_print(key, value.shape)
+            # print("=" * 100)
+            # for each in model_state_dict:
+            #     rank0_print(each)
             # if model_args.is_eff_moe:
             #     new_state_dict = convert_eff_state_dict(model_state_dict, ckpt, model_args.num_experts)
             # else:
@@ -973,6 +977,8 @@ def train():
                 state_dict=new_state_dict,
                 **bnb_model_from_pretrained_args
             )
+            assert torch.equal(model.state_dict()['model.layers.19.mlp.experts.0.gate_proj.weight'],
+                               new_state_dict['model.layers.19.mlp.experts.0.gate_proj.weight'])
             rank0_print(model)
             # model = LlavaLlamaForCausalLM.from_pretrained(
             #     model_args.model_name_or_path,
