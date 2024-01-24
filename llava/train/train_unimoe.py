@@ -32,7 +32,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
 from llava.model import *
-from llava.model.utils import convert_state_dict, convert_eff_state_dict, convert_uni_state_dict, convert_uni_state_dict
+from llava.model.utils import convert_state_dict, convert_eff_state_dict, convert_uni_state_dict
 from llava.mm_utils import tokenizer_image_token
 from llava.model.multimodal_projector.builder import Qformer, GatedLinear
 from PIL import Image
@@ -961,14 +961,7 @@ def train():
             # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
             model_state_dict = set(list(UniMoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
             new_state_dict = convert_uni_state_dict(model_state_dict, ckpt, model_args.num_experts)
-            # for key, value in new_state_dict.items():
-            #     try:
-            #         assert key in model_state_dict
-            #     except:
-            #         rank0_print(key)
-            #         exit(-1)
-            # for each in model_state_dict:
-            #     rank0_print(each)
+            
             # if model_args.is_eff_moe:
             #     new_state_dict = convert_eff_state_dict(model_state_dict, ckpt, model_args.num_experts)
             # else:

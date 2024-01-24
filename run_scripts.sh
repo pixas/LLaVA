@@ -10,7 +10,7 @@ fi
 script_path="$1"
 
 # 检测条件
-min_memory=40000  # 最小显存大小
+min_memory=32000  # 最小显存大小
 min_cards=4       # 最少显卡数量
 
 echo "开始监测显卡剩余显存..."
