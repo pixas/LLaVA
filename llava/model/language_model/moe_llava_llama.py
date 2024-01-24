@@ -155,11 +155,14 @@ class MoELLamaMLP(nn.Module):
             # begin to compute load balancing loss 
             # compute the number of tokens routed to each expert
             # compute the fraction of tokens routed to each expert
+            # 选择第i个expert的token数量
             num_per_expert = len(batch_idx)
+            # 选择第i个expert的token 比例，对应公式中的f_i
             fraction_per_expert = num_per_expert / (batch_size * N)
+            # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
             prob_per_expert = weights[batch_idx, nth_expert, None].mean()
             load_balancing_loss += fraction_per_expert * prob_per_expert
-
+        load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
         
         results = results.contiguous().view(batch_size, N, self.hidden_size)
         return results, load_balancing_loss

@@ -84,7 +84,7 @@ class UniMoELLamaMLP(nn.Module):
         # x = self.dropout(x)
         new_x = self.shared_expert(x)
         if self.is_sparse:
-            hidden_states, lbl_loss = self.fast_forward_sparse(x)
+            hidden_states, lbl_loss = self.forward_sparse(x)
             return hidden_states + new_x, lbl_loss
             # return self.forward_sparse(x) + new_x
         else:
@@ -163,10 +163,14 @@ class UniMoELLamaMLP(nn.Module):
             # begin to compute load balancing loss 
             # compute the number of tokens routed to each expert
             # compute the fraction of tokens routed to each expert
+            # 选择第i个expert的token数量
             num_per_expert = len(batch_idx)
+            # 选择第i个expert的token 比例，对应公式中的f_i
             fraction_per_expert = num_per_expert / (batch_size * N)
+            # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
             prob_per_expert = weights[batch_idx, nth_expert, None].mean()
             load_balancing_loss += fraction_per_expert * prob_per_expert
+        load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
 
         
         results = results.contiguous().view(batch_size, N, self.hidden_size)
@@ -431,9 +435,9 @@ class UniMoELlavaLlamaForCausalLM(UniMoELlamaForCausalLM, MoELlavaMetaForCausalL
             # Enable model/pipeline parallelism
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
-            # if getattr(outputs, "lbl_loss", None) is not None:
-            #     lbl_loss = outputs.lbl_loss
-            #     loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
+            if getattr(outputs, "lbl_loss", None) is not None:
+                lbl_loss = outputs.lbl_loss
+                loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
                 
             if expert_info is not None:
                 counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())
