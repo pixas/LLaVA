@@ -29,6 +29,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutpu
 
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
+from copy import copy
 
 logger = logging.get_logger(__name__)
 
@@ -67,7 +68,7 @@ class UniMoELLamaMLP(nn.Module):
         self.num_experts_per_token = config.num_experts_per_token 
         self.is_sparse = config.is_sparse 
         self.is_eff_moe = config.is_eff_moe
-        new_config = config.copy()
+        new_config = copy(config)
         new_config.intermediate_size = self.intermediate_size * self.num_experts
         self.shared_expert = LlamaMLP(new_config)
         self.experts = nn.ModuleList([LlamaMLP(config) for _ in range(self.num_experts)])
