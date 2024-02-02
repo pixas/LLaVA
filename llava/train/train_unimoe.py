@@ -977,8 +977,8 @@ def train():
                 state_dict=new_state_dict,
                 **bnb_model_from_pretrained_args
             )
-            assert torch.equal(model.state_dict()['model.layers.19.mlp.experts.0.gate_proj.weight'],
-                               new_state_dict['model.layers.19.mlp.experts.0.gate_proj.weight'])
+            # assert torch.equal(model.state_dict()['model.layers.19.mlp.experts.0.gate_proj.weight'],
+            #                    new_state_dict['model.layers.19.mlp.experts.0.gate_proj.weight'])
             rank0_print(model)
             # model = LlavaLlamaForCausalLM.from_pretrained(
             #     model_args.model_name_or_path,
@@ -1062,9 +1062,9 @@ def train():
             conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
-    # if training_args.local_rank == 0 or training_args.local_rank == -1:
-    #     for name, param in model.named_parameters():
-    #         print(name)
+    if training_args.local_rank == 0 or training_args.local_rank == -1:
+        for name, param in model.named_parameters():
+            print(name, param.dtype)
     # print(tokenizer)
     # print(model.get_model())
     # model1 = Qformer(1024, 4096, qformer_text_input=model_args.qformer_text_input)

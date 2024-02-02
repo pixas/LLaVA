@@ -177,6 +177,8 @@ def load_pretrained_moe_model(model_path, model_base, model_name, load_8bit=Fals
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             print('Loading LLaVA from base model...')
+            print("Lora config:")
+            print(lora_cfg_pretrained)
             ckpt = {}
             for each_ckpt in os.listdir(model_base):
                 if each_ckpt.endswith(".bin"):
@@ -185,7 +187,9 @@ def load_pretrained_moe_model(model_path, model_base, model_name, load_8bit=Fals
             model_state_dict = set(list(MoELlavaLlamaForCausalLM(lora_cfg_pretrained).state_dict().keys()))
             new_state_dict = convert_state_dict(model_state_dict, ckpt, lora_cfg_pretrained.num_experts)
             model = MoELlavaLlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, state_dict=new_state_dict, **kwargs)
-
+            incompatible_keys = model.load_state_dict(new_state_dict, strict=False)
+            print(incompatible_keys)
+            print(lora_cfg_pretrained)
             token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
             if model.lm_head.weight.shape[0] != token_num:
                 model.lm_head.weight = torch.nn.Parameter(torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype))

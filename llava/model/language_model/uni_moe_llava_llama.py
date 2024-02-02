@@ -45,12 +45,14 @@ class UniMoEBaseModelOutputWithPast(ModelOutput):
 class UniMoELlamaConfig(LlamaConfig):
     model_type = "unimoe_llama"
     def __init__(self, vocab_size=32000, hidden_size=4096, intermediate_size=11008, num_hidden_layers=32, num_attention_heads=32, num_key_value_heads=None, hidden_act="silu", max_position_embeddings=2048, initializer_range=0.02, rms_norm_eps=0.000001, use_cache=True, pad_token_id=0, bos_token_id=1, eos_token_id=2, pretraining_tp=1, tie_word_embeddings=False, rope_scaling=None, 
-                 num_experts=4, num_experts_per_token=2, is_sparse=True, moe_layer_index=-1, is_eff_moe=False, **kwargs):
+                 num_experts=4, num_experts_per_token=2, is_sparse=True, 
+                 moe_layer_index=-1, is_eff_moe=False, use_lbl_loss=False, **kwargs):
         self.num_experts = num_experts
         self.num_experts_per_token = num_experts_per_token
         self.is_sparse = is_sparse
         self.moe_layer_index = moe_layer_index
         self.is_eff_moe = is_eff_moe
+        self.use_lbl_loss = use_lbl_loss
         super().__init__(vocab_size, hidden_size, intermediate_size, num_hidden_layers, num_attention_heads, num_key_value_heads, hidden_act, max_position_embeddings, initializer_range, rms_norm_eps, use_cache, pad_token_id, bos_token_id, eos_token_id, pretraining_tp, tie_word_embeddings, rope_scaling, **kwargs)
         
 
@@ -68,6 +70,7 @@ class UniMoELLamaMLP(nn.Module):
         self.num_experts_per_token = config.num_experts_per_token 
         self.is_sparse = config.is_sparse 
         self.is_eff_moe = config.is_eff_moe
+        self.use_lbl_loss = config.use_lbl_loss
         new_config = copy(config)
         new_config.intermediate_size = self.intermediate_size * self.num_experts
         self.shared_expert = LlamaMLP(new_config)
@@ -84,9 +87,15 @@ class UniMoELLamaMLP(nn.Module):
         # x = self.dropout(x)
         new_x = self.shared_expert(x)
         if self.is_sparse:
-            hidden_states, lbl_loss = self.forward_sparse(x)
-            return hidden_states + new_x, lbl_loss
+            if self.use_lbl_loss:
+                hidden_states, lbl_loss = self.forward_sparse(x)
+                return hidden_states + new_x, lbl_loss
+            else:
+                return self.forward_sparse(x) + new_x
+            # hidden_states, lbl_loss = self.forward_sparse(x)
+            # return hidden_states + new_x, lbl_loss
             # return self.forward_sparse(x) + new_x
+
         else:
             hidden_states, lbl_loss = self.forward_dense(x)
             return hidden_states + new_x, lbl_loss
@@ -164,17 +173,22 @@ class UniMoELLamaMLP(nn.Module):
             # compute the number of tokens routed to each expert
             # compute the fraction of tokens routed to each expert
             # 选择第i个expert的token数量
-            num_per_expert = len(batch_idx)
-            # 选择第i个expert的token 比例，对应公式中的f_i
-            fraction_per_expert = num_per_expert / (batch_size * N)
-            # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
-            prob_per_expert = weights[batch_idx, nth_expert, None].mean()
-            load_balancing_loss += fraction_per_expert * prob_per_expert
-        load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
-
+            if self.use_lbl_loss and self.training:
+                num_per_expert = len(batch_idx)
+                # 选择第i个expert的token 比例，对应公式中的f_i
+                fraction_per_expert = num_per_expert / (batch_size * N)
+                # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
+                prob_per_expert = weights[batch_idx, nth_expert, None].mean()
+                load_balancing_loss += fraction_per_expert * prob_per_expert
         
         results = results.contiguous().view(batch_size, N, self.hidden_size)
-        return results, load_balancing_loss
+        
+        if self.use_lbl_loss:
+            load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
+            return results, load_balancing_loss
+        else:
+        # return results, load_balancing_loss
+            return results
     
     def forward_dense(self, x: torch.Tensor):
         batch_size, N, d = x.shape 
@@ -192,7 +206,7 @@ class UniMoELLamaMLP(nn.Module):
 class UniMoELLamaDecoderLayer(LlamaDecoderLayer):
     def __init__(self, config: LlamaConfig):
         super().__init__(config)
-        
+        self.config = config
         self.mlp = UniMoELLamaMLP(config)
     
     def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_value: Tuple[torch.Tensor] | None = None, output_attentions: bool | None = False, use_cache: bool | None = False) -> Tuple[torch.FloatTensor, Tuple[torch.FloatTensor, torch.FloatTensor] | None]:
@@ -214,7 +228,10 @@ class UniMoELLamaDecoderLayer(LlamaDecoderLayer):
         # Fully Connected
         residual = hidden_states
         hidden_states = self.post_attention_layernorm(hidden_states)
-        hidden_states, lbl_loss = self.mlp(hidden_states)
+        if self.config.use_lbl_loss:
+            hidden_states, lbl_loss = self.mlp(hidden_states)
+        else:
+            hidden_states = self.mlp(hidden_states)
         hidden_states = residual + hidden_states
 
         outputs = (hidden_states,)
@@ -225,12 +242,15 @@ class UniMoELLamaDecoderLayer(LlamaDecoderLayer):
         if use_cache:
             outputs += (present_key_value,)
 
-        return outputs, lbl_loss
+        if self.config.use_lbl_loss:
+            return outputs, lbl_loss
+        else:
+            return outputs
 
 class UniMoELlamaModel(LlamaModel):
     def __init__(self, config: UniMoELlamaConfig):
         super().__init__(config)
-        
+        self.config = config
         # only first some layers are processed with MoE
         if config.moe_layer_index == -1:
             self.layers = nn.ModuleList([UniMoELLamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
@@ -313,8 +333,9 @@ class UniMoELlamaModel(LlamaModel):
                         return module(*inputs, output_attentions, None)
 
                     return custom_forward
-
-                layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+                
+                # layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+                temp = torch.utils.checkpoint.checkpoint(
                     create_custom_forward(decoder_layer),
                     hidden_states,
                     attention_mask,
@@ -322,7 +343,7 @@ class UniMoELlamaModel(LlamaModel):
                     None,
                 )
             else:
-                layer_outputs, lbl_loss = decoder_layer(
+                temp = decoder_layer(
                     hidden_states,
                     attention_mask=attention_mask,
                     position_ids=position_ids,
@@ -330,9 +351,14 @@ class UniMoELlamaModel(LlamaModel):
                     output_attentions=output_attentions,
                     use_cache=use_cache,
                 )
+            if self.config.use_lbl_loss:
+                layer_outputs, lbl_loss = temp 
+            else:
+                layer_outputs = temp
 
             hidden_states = layer_outputs[0]
-            lbl_loss_total[idx] = lbl_loss
+            lbl_loss_total[idx] = lbl_loss if self.config.use_lbl_loss else None
+            # lbl_loss_total[idx] = lbl_loss
 
             if use_cache:
                 next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
@@ -435,9 +461,9 @@ class UniMoELlavaLlamaForCausalLM(UniMoELlamaForCausalLM, MoELlavaMetaForCausalL
             # Enable model/pipeline parallelism
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
-            if getattr(outputs, "lbl_loss", None) is not None:
+            if getattr(outputs, "lbl_loss", None) is not None and (None not in outputs.lbl_loss):
                 lbl_loss = outputs.lbl_loss
-                loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
+                loss = loss + sum(lbl_loss) * self.load_batmlancing_loss_ceof 
                 
             if expert_info is not None:
                 counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())

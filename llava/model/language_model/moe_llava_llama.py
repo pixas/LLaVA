@@ -136,36 +136,45 @@ class MoELLamaMLP(nn.Module):
         weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
         weights = F.softmax(weights, dim=-1)  # [bs * N, expert]
         results = torch.zeros((batch_size * N, self.hidden_size)).to(x) # bs*N, d
-        
+        load_balancing_loss = 0
         # compute load balancing loss
         # first compute total token number 
         # then compute the fraction of tokens routed to each expert
         # then compute the mean routing probability
         # then compute the load balancing loss
-        load_balancing_loss = 0
-        for i, expert in enumerate(self.experts):
+        if self.training or N > 1:
+            for i, expert in enumerate(self.experts):
 
-            batch_idx, nth_expert = torch.where(selected_experts == i) 
-            # batch_idx: [bs * N, 1]
-            # nth_expert: [bs * N, 1]
-            expert_output = expert(x[batch_idx])
-            if self.is_eff_moe:
-                expert_output *= (self.num_experts / self.num_experts_per_token)
-            results[batch_idx] += weights[batch_idx, nth_expert, None] * expert_output
-            # begin to compute load balancing loss 
-            # compute the number of tokens routed to each expert
-            # compute the fraction of tokens routed to each expert
-            # 选择第i个expert的token数量
-            num_per_expert = len(batch_idx)
-            # 选择第i个expert的token 比例，对应公式中的f_i
-            fraction_per_expert = num_per_expert / (batch_size * N)
-            # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
-            prob_per_expert = weights[batch_idx, nth_expert, None].mean()
-            load_balancing_loss += fraction_per_expert * prob_per_expert
-        load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
+                batch_idx, nth_expert = torch.where(selected_experts == i) 
+                # batch_idx: [bs * N, 1]
+                # nth_expert: [bs * N, 1]
+                expert_output = expert(x[batch_idx])
+                if self.is_eff_moe:
+                    expert_output *= (self.num_experts / self.num_experts_per_token)
+                results[batch_idx] += weights[batch_idx, nth_expert, None] * expert_output
+                # begin to compute load balancing loss 
+                # compute the number of tokens routed to each expert
+                # compute the fraction of tokens routed to each expert
+                # 选择第i个expert的token数量
+                num_per_expert = len(batch_idx)
+                # 选择第i个expert的token 比例，对应公式中的f_i
+                fraction_per_expert = num_per_expert / (batch_size * N)
+                # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
+                prob_per_expert = weights[batch_idx, nth_expert, None].mean()
+                load_balancing_loss += fraction_per_expert * prob_per_expert
+            load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
+        else:
+            assert selected_experts.shape[0] == 1
+            
+            selected_experts = selected_experts.flatten()
+            weights = weights.flatten()
+            for idx, expert_idx in enumerate(selected_experts):
+                results += weights[idx] * self.experts[expert_idx](x)
         
         results = results.contiguous().view(batch_size, N, self.hidden_size)
+
         return results, load_balancing_loss
+
     
     def forward_dense(self, x: torch.Tensor):
         batch_size, N, d = x.shape 
@@ -217,6 +226,7 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
             outputs += (present_key_value,)
 
         return outputs, lbl_loss
+
 
 class MoELlamaModel(LlamaModel):
     def __init__(self, config: MoELlamaConfig):
@@ -304,29 +314,49 @@ class MoELlamaModel(LlamaModel):
                         return module(*inputs, output_attentions, None)
 
                     return custom_forward
-
-                layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
-                    create_custom_forward(decoder_layer),
-                    hidden_states,
-                    attention_mask,
-                    position_ids,
-                    None,
-                )
+                if isinstance(decoder_layer, MoELLamaDecoderLayer):
+                    layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
+                        create_custom_forward(decoder_layer),
+                        hidden_states,
+                        attention_mask,
+                        position_ids,
+                        None,
+                    )
+                else:
+                    layer_outputs = torch.utils.checkpoint.checkpoint(
+                        create_custom_forward(decoder_layer),
+                        hidden_states,
+                        attention_mask,
+                        position_ids,
+                        None,
+                    )
             else:
-                layer_outputs, lbl_loss = decoder_layer(
-                    hidden_states,
-                    attention_mask=attention_mask,
-                    position_ids=position_ids,
-                    past_key_value=past_key_value,
-                    output_attentions=output_attentions,
-                    use_cache=use_cache,
-                )
+                if isinstance(decoder_layer, MoELLamaDecoderLayer):
+                    layer_outputs, lbl_loss = decoder_layer(
+                        hidden_states,
+                        attention_mask=attention_mask,
+                        position_ids=position_ids,
+                        past_key_value=past_key_value,
+                        output_attentions=output_attentions,
+                        use_cache=use_cache,
+                    )
+                else:
+                    layer_outputs = decoder_layer(
+                        hidden_states,
+                        attention_mask=attention_mask,
+                        position_ids=position_ids,
+                        past_key_value=past_key_value,
+                        output_attentions=output_attentions,
+                        use_cache=use_cache,
+                    )
+                
 
             hidden_states = layer_outputs[0]
             lbl_loss_total[idx] = lbl_loss
-
+            
             if use_cache:
                 next_decoder_cache += (layer_outputs[2 if output_attentions else 1],)
+       
 
             if output_attentions:
                 all_self_attns += (layer_outputs[1],)
@@ -426,10 +456,10 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
             # Enable model/pipeline parallelism
             shift_labels = shift_labels.to(shift_logits.device)
             loss = loss_fct(shift_logits, shift_labels)
-            # if getattr(outputs, "lbl_loss", None) is not None:
-            #     if outputs.lbl_loss [0] != 0:
-            #         lbl_loss = outputs.lbl_loss
-            #         loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
+            if getattr(outputs, "lbl_loss", None) is not None:
+                if outputs.lbl_loss [0] != 0:
+                    lbl_loss = outputs.lbl_loss
+                    loss = loss + sum(lbl_loss) * self.load_balancing_loss_ceof 
                 
             if expert_info is not None:
                 counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())

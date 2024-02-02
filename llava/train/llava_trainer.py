@@ -12,7 +12,7 @@ from transformers.trainer import (
     ShardedDDPOption,
     logger,
 )
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 def maybe_zero_3(param, ignore_status=False, name=None):
