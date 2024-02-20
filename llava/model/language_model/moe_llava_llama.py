@@ -231,8 +231,11 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
 
         if use_cache:
             outputs += (present_key_value,)
-
-        return outputs, lbl_loss
+        if self.config.use_lbl_loss:
+            return outputs, lbl_loss
+        else:
+            return outputs
+        
 
 
 class MoELlamaModel(LlamaModel):
