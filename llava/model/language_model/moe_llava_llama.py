@@ -26,7 +26,7 @@ from transformers import AutoConfig, AutoModelForCausalLM, \
 from transformers.models.llama.modeling_llama import LlamaDecoderLayer, LlamaMLP
 
 from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast, ModelOutput, dataclass
-
+from copy import deepcopy
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
 
@@ -237,7 +237,21 @@ class MoELlamaModel(LlamaModel):
             self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
         else:
             moe_layer_index = config.moe_layer_index 
-            self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < moe_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+            half_layer_index = moe_layer_index // 2
+            # self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < moe_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+            # self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < half_layer_index or i > config.num_hidden_layers - half_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+            self.layers = nn.ModuleList([])
+            for i in range(config.num_hidden_layers):
+                cur_config = deepcopy(config)
+                if i < 16:
+                    cur_config.num_experts = 2
+                elif i < 24:
+                    cur_config.num_experts = 3
+                else:
+                    cur_config.num_experts = 4
+                
+                self.layers.append(MoELLamaDecoderLayer(cur_config))
+                
         self.post_init()
     
     def forward(self, input_ids: torch.LongTensor = None, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_values: List[torch.FloatTensor] | None = None, inputs_embeds: torch.FloatTensor | None = None, use_cache: bool | None = None, output_attentions: bool | None = None, output_hidden_states: bool | None = None, return_dict: bool | None = None) -> Tuple | MoEBaseModelOutputWithPast:
