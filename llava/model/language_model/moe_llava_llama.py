@@ -170,15 +170,13 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         def T(w):
             return w.transpose(0, 1) if self.fan_in_fan_out else w
         if self.r > 0 and not self.merged:
-            sta = time.time()
+            # sta = time.time()
             result = F.linear(x, T(self.weight), bias=self.bias)
-            print("F.linear time: ", time.time() - sta)
-            sta = time.time()
+            # sta = time.time()
             if self.use_lbl_loss:
                 moe_result, lbl_loss = self.molora_helpder(x)
             else:
                 moe_result = self.molora_helpder(x)
-            print("moe_result time: ", time.time() - sta)
             result += moe_result * self.scaling
             # result += (self.lora_dropout(x) @ self.lora_A.transpose(0, 1) @ self.lora_B.transpose(0, 1)) * self.scaling
             return result
@@ -400,6 +398,7 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
         hidden_states = self.input_layernorm(hidden_states)
 
         # Self Attention
+        # sta = time.time()
         hidden_states, self_attn_weights, present_key_value = self.self_attn(
             hidden_states=hidden_states,
             attention_mask=attention_mask,
@@ -409,15 +408,18 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
             use_cache=use_cache,
         )
         hidden_states = residual + hidden_states
+        
 
         # Fully Connected
         residual = hidden_states
         hidden_states = self.post_attention_layernorm(hidden_states)
+        # sta = time.time()
         if self.config.use_lbl_loss:
             hidden_states, lbl_loss = self.mlp(hidden_states)
         else:
             hidden_states = self.mlp(hidden_states)
         hidden_states = residual + hidden_states
+
 
         outputs = (hidden_states,)
 
@@ -650,6 +652,7 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
         input_ids, attention_mask, past_key_values, inputs_embeds, labels, expert_info = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
+        sta = time.time()
         outputs = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -660,6 +663,7 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
+        print("language model:", time.time() - sta)
 
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)
