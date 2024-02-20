@@ -45,12 +45,13 @@ class MoEBaseModelOutputWithPast(ModelOutput):
 class MoELlamaConfig(LlamaConfig):
     model_type = "moe_llama"
     def __init__(self, vocab_size=32000, hidden_size=4096, intermediate_size=11008, num_hidden_layers=32, num_attention_heads=32, num_key_value_heads=None, hidden_act="silu", max_position_embeddings=2048, initializer_range=0.02, rms_norm_eps=0.000001, use_cache=True, pad_token_id=0, bos_token_id=1, eos_token_id=2, pretraining_tp=1, tie_word_embeddings=False, rope_scaling=None, 
-                 num_experts=4, num_experts_per_token=2, is_sparse=True, moe_layer_index=-1, is_eff_moe=False, **kwargs):
+                 num_experts=4, num_experts_per_token=2, is_sparse=True, moe_layer_index=-1, is_eff_moe=False, use_lbl_loss=False, **kwargs):
         self.num_experts = num_experts
         self.num_experts_per_token = num_experts_per_token
         self.is_sparse = is_sparse
         self.moe_layer_index = moe_layer_index
         self.is_eff_moe = is_eff_moe
+        self.use_lbl_loss = use_lbl_loss
         super().__init__(vocab_size, hidden_size, intermediate_size, num_hidden_layers, num_attention_heads, num_key_value_heads, hidden_act, max_position_embeddings, initializer_range, rms_norm_eps, use_cache, pad_token_id, bos_token_id, eos_token_id, pretraining_tp, tie_word_embeddings, rope_scaling, **kwargs)
         
 
@@ -60,6 +61,7 @@ class MoELlavaConfig(MoELlamaConfig):
 class MoELLamaMLP(nn.Module):
     def __init__(self, config) -> None:
         super(MoELLamaMLP, self).__init__()
+        self.use_lbl_loss = config.use_lbl_loss
         self.hidden_size = config.hidden_size 
         self.intermediate_size = config.intermediate_size
         self.num_experts = config.num_experts 
@@ -172,8 +174,10 @@ class MoELLamaMLP(nn.Module):
                 results += weights[idx] * self.experts[expert_idx](x)
         
         results = results.contiguous().view(batch_size, N, self.hidden_size)
-
-        return results, load_balancing_loss
+        if self.use_lbl_loss:
+            return results, load_balancing_loss
+        else:
+            return results
 
     
     def forward_dense(self, x: torch.Tensor):
@@ -192,7 +196,7 @@ class MoELLamaMLP(nn.Module):
 class MoELLamaDecoderLayer(LlamaDecoderLayer):
     def __init__(self, config: LlamaConfig):
         super().__init__(config)
-        
+        self.config = config
         self.mlp = MoELLamaMLP(config)
     
     def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_value: Tuple[torch.Tensor] | None = None, output_attentions: bool | None = False, use_cache: bool | None = False) -> Tuple[torch.FloatTensor, Tuple[torch.FloatTensor, torch.FloatTensor] | None]:
@@ -214,7 +218,10 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
         # Fully Connected
         residual = hidden_states
         hidden_states = self.post_attention_layernorm(hidden_states)
-        hidden_states, lbl_loss = self.mlp(hidden_states)
+        if self.config.use_lbl_loss:
+            hidden_states, lbl_loss = self.mlp(hidden_states)
+        else:
+            hidden_states = self.mlp(hidden_states)
         hidden_states = residual + hidden_states
 
         outputs = (hidden_states,)
@@ -231,26 +238,26 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
 class MoELlamaModel(LlamaModel):
     def __init__(self, config: MoELlamaConfig):
         super().__init__(config)
-        
+        self.config = config
         # only first some layers are processed with MoE
         if config.moe_layer_index == -1:
             self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
         else:
             moe_layer_index = config.moe_layer_index 
             half_layer_index = moe_layer_index // 2
-            # self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < moe_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
-            # self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < half_layer_index or i > config.num_hidden_layers - half_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
-            self.layers = nn.ModuleList([])
-            for i in range(config.num_hidden_layers):
-                cur_config = deepcopy(config)
-                if i < 16:
-                    cur_config.num_experts = 2
-                elif i < 24:
-                    cur_config.num_experts = 3
-                else:
-                    cur_config.num_experts = 4
+            self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < moe_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+            self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < half_layer_index or i > config.num_hidden_layers - half_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+            # self.layers = nn.ModuleList([])
+            # for i in range(config.num_hidden_layers):
+            #     cur_config = deepcopy(config)
+            #     if i < 16:
+            #         cur_config.num_experts = 2
+            #     elif i < 24:
+            #         cur_config.num_experts = 3
+            #     else:
+            #         cur_config.num_experts = 4
                 
-                self.layers.append(MoELLamaDecoderLayer(cur_config))
+            #     self.layers.append(MoELLamaDecoderLayer(cur_config))
                 
         self.post_init()
     
@@ -319,7 +326,7 @@ class MoELlamaModel(LlamaModel):
                 all_hidden_states += (hidden_states,)
 
             past_key_value = past_key_values[idx] if past_key_values is not None else None
-
+            lbl_loss = 0
             if self.gradient_checkpointing and self.training:
 
                 def create_custom_forward(module):
@@ -328,7 +335,7 @@ class MoELlamaModel(LlamaModel):
                         return module(*inputs, output_attentions, None)
 
                     return custom_forward
-                if isinstance(decoder_layer, MoELLamaDecoderLayer):
+                if isinstance(decoder_layer, MoELLamaDecoderLayer) and self.config.use_lbl_loss:
                     layer_outputs, lbl_loss = torch.utils.checkpoint.checkpoint(
                         create_custom_forward(decoder_layer),
                         hidden_states,
@@ -345,7 +352,7 @@ class MoELlamaModel(LlamaModel):
                         None,
                     )
             else:
-                if isinstance(decoder_layer, MoELLamaDecoderLayer):
+                if isinstance(decoder_layer, MoELLamaDecoderLayer) and self.config.use_lbl_loss:
                     layer_outputs, lbl_loss = decoder_layer(
                         hidden_states,
                         attention_mask=attention_mask,
