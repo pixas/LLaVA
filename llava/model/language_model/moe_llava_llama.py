@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss
-
+import time 
 from transformers import AutoConfig, AutoModelForCausalLM, \
                          LlamaConfig, LlamaModel, LlamaForCausalLM
 
@@ -29,6 +29,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutpu
 from copy import deepcopy
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
+import math 
 
 logger = logging.get_logger(__name__)
 
@@ -45,18 +46,212 @@ class MoEBaseModelOutputWithPast(ModelOutput):
 class MoELlamaConfig(LlamaConfig):
     model_type = "moe_llama"
     def __init__(self, vocab_size=32000, hidden_size=4096, intermediate_size=11008, num_hidden_layers=32, num_attention_heads=32, num_key_value_heads=None, hidden_act="silu", max_position_embeddings=2048, initializer_range=0.02, rms_norm_eps=0.000001, use_cache=True, pad_token_id=0, bos_token_id=1, eos_token_id=2, pretraining_tp=1, tie_word_embeddings=False, rope_scaling=None, 
-                 num_experts=4, num_experts_per_token=2, is_sparse=True, moe_layer_index=-1, is_eff_moe=False, use_lbl_loss=False, **kwargs):
+                 num_experts=4, num_experts_per_token=2, is_sparse=True, moe_layer_index=-1, is_eff_moe=False, use_lbl_loss=False, 
+                 mix_lora_r=128, mix_lora_alpha=256, lora_dropout=0.0, merge_weights=False,**kwargs):
         self.num_experts = num_experts
         self.num_experts_per_token = num_experts_per_token
         self.is_sparse = is_sparse
         self.moe_layer_index = moe_layer_index
         self.is_eff_moe = is_eff_moe
         self.use_lbl_loss = use_lbl_loss
+        self.mix_lora_r = mix_lora_r 
+        self.mix_lora_alpha = mix_lora_alpha
+        self.lora_dropout = lora_dropout
+        self.merge_weights = merge_weights
         super().__init__(vocab_size, hidden_size, intermediate_size, num_hidden_layers, num_attention_heads, num_key_value_heads, hidden_act, max_position_embeddings, initializer_range, rms_norm_eps, use_cache, pad_token_id, bos_token_id, eos_token_id, pretraining_tp, tie_word_embeddings, rope_scaling, **kwargs)
         
 
 class MoELlavaConfig(MoELlamaConfig):
     model_type = "moe_llava"
+
+class LoRALayer():
+    def __init__(
+        self, 
+        r: int, 
+        lora_alpha: int, 
+        lora_dropout: float,
+        merge_weights: bool,
+    ):
+        self.r = r
+        self.lora_alpha = lora_alpha
+        # Optional dropout
+        if lora_dropout > 0.:
+            self.lora_dropout = nn.Dropout(p=lora_dropout)
+        else:
+            self.lora_dropout = lambda x: x
+        # Mark the weight as unmerged
+        self.merged = False
+        self.merge_weights = merge_weights
+
+class LoRAModule(nn.Module):
+    def __init__(self, in_features, out_features, r):
+        super(LoRAModule, self).__init__()
+        self.lora_a = nn.Parameter(torch.zeros((r, in_features)))
+        self.lora_b = nn.Parameter(torch.zeros((out_features, r)))
+        self.reset_parameters()
+
+    def forward(self):
+        return self.lora_a.transpose(0, 1) @ self.lora_b.transpose(0, 1)
+
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.lora_a, a=math.sqrt(5))
+        nn.init.zeros_(self.lora_b)
+
+class MoLoRALinear(nn.Linear, LoRALayer):
+    # LoRA implemented in a dense layer
+    def __init__(
+        self, 
+        in_features: int, 
+        out_features: int, 
+        num_experts: int = 4,
+        num_experts_per_token: int = 2,
+        r: int = 0, 
+        lora_alpha: int = 1, 
+        lora_dropout: float = 0.,
+        fan_in_fan_out: bool = False, # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
+        merge_weights: bool = True,
+        use_lbl_loss: bool = False,
+        **kwargs
+    ):
+        nn.Linear.__init__(self, in_features, out_features, **kwargs)
+        LoRALayer.__init__(self, r=r, lora_alpha=lora_alpha, lora_dropout=lora_dropout,
+                           merge_weights=merge_weights)
+
+        self.fan_in_fan_out = fan_in_fan_out
+        # moe parameters
+        self.num_experts = num_experts 
+        self.num_experts_per_token = num_experts_per_token
+        self.switch = nn.Linear(in_features, num_experts)
+        self.use_lbl_loss = use_lbl_loss    
+        
+        # Actual trainable parameters
+        if r > 0:
+            self.experts = nn.ModuleList([
+                LoRAModule(in_features, out_features, r)
+            for _ in range(num_experts)])
+
+            # self.lora_A = nn.Parameter(self.weight.new_zeros((r, in_features)))
+            # self.lora_B = nn.Parameter(self.weight.new_zeros((out_features, r)))
+            self.scaling = self.lora_alpha / self.r
+            # Freezing the pre-trained weight matrix
+            self.weight.requires_grad = False
+        self.reset_parameters()
+        if fan_in_fan_out:
+            self.weight.data = self.weight.data.transpose(0, 1)
+
+    def reset_parameters(self):
+        nn.Linear.reset_parameters(self)
+        # if hasattr(self, 'experts'):
+        #     # initialize B the same way as the default for nn.Linear and A to zero
+        #     # this is different than what is described in the paper but should not affect performance
+        #     for expert in self.experts:
+        #         expert.reset_parameters()
+            # nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
+            # nn.init.zeros_(self.lora_B)
+
+    def train(self, mode: bool = True):
+        def T(w):
+            return w.transpose(0, 1) if self.fan_in_fan_out else w
+        nn.Linear.train(self, mode)
+        # if mode:
+        #     if self.merge_weights and self.merged:
+        #         # Make sure that the weights are not merged
+        #         if self.r > 0:
+        #             self.weight.data -= T(self.lora_B @ self.lora_A) * self.scaling
+        #         self.merged = False
+        # else:
+        #     if self.merge_weights and not self.merged:
+        #         # Merge the weights and mark it
+        #         if self.r > 0:
+        #             self.weight.data += T(self.lora_B @ self.lora_A) * self.scaling
+        #         self.merged = True       
+
+    def forward(self, x: torch.Tensor):
+        def T(w):
+            return w.transpose(0, 1) if self.fan_in_fan_out else w
+        if self.r > 0 and not self.merged:
+            sta = time.time()
+            result = F.linear(x, T(self.weight), bias=self.bias)
+            print("F.linear time: ", time.time() - sta)
+            sta = time.time()
+            if self.use_lbl_loss:
+                moe_result, lbl_loss = self.molora_helpder(x)
+            else:
+                moe_result = self.molora_helpder(x)
+            print("moe_result time: ", time.time() - sta)
+            result += moe_result * self.scaling
+            # result += (self.lora_dropout(x) @ self.lora_A.transpose(0, 1) @ self.lora_B.transpose(0, 1)) * self.scaling
+            return result
+        else:
+            return F.linear(x, T(self.weight), bias=self.bias)
+    
+    def molora_helpder(self, x: torch.Tensor):
+        batch_size, N, d = x.shape 
+        x = x.contiguous().view(-1, d)     
+        x = self.lora_dropout(x)    
+        gate_logits = self.switch(x)  # [bs * N, expert]
+        weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
+        weights = F.softmax(weights, dim=-1)  # [bs * N, expert]
+        results = torch.zeros((batch_size * N, self.out_features)).to(x) # bs*N, d
+        load_balancing_loss = 0
+        # compute load balancing loss
+        # first compute total token number 
+        # then compute the fraction of tokens routed to each expert
+        # then compute the mean routing probability
+        # then compute the load balancing loss
+        if self.training or N > 1:
+            for i, expert in enumerate(self.experts):
+
+                batch_idx, nth_expert = torch.where(selected_experts == i) 
+                # batch_idx: [bs * N, 1]
+                # nth_expert: [bs * N, 1]
+                expert_output = x[batch_idx] @ expert()
+                # expert_output = expert(x[batch_idx])
+                results[batch_idx] += weights[batch_idx, nth_expert, None] * expert_output
+                # begin to compute load balancing loss 
+                # compute the number of tokens routed to each expert
+                # compute the fraction of tokens routed to each expert
+                # 选择第i个expert的token数量
+                num_per_expert = len(batch_idx)
+                # 选择第i个expert的token 比例，对应公式中的f_i
+                fraction_per_expert = num_per_expert / (batch_size * N)
+                # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
+                prob_per_expert = weights[batch_idx, nth_expert, None].mean()
+                load_balancing_loss += fraction_per_expert * prob_per_expert
+            load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
+        else:
+            assert selected_experts.shape[0] == 1
+            
+            selected_experts = selected_experts.flatten()
+            weights = weights.flatten()
+            for idx, expert_idx in enumerate(selected_experts):
+                results += weights[idx] * (x @ self.experts[expert_idx]())
+        
+        results = results.contiguous().view(batch_size, N, self.out_features)
+        if self.use_lbl_loss:
+            return results, load_balancing_loss
+        else:
+            return results
+
+class MoLoRALlamaMLP(LlamaMLP):
+    def __init__(self, config) -> None:
+        super(MoLoRALlamaMLP, self).__init__(config)
+        self.mix_lora_r = config.mix_lora_r
+        self.mix_lora_alpha = config.mix_lora_alpha
+        self.lora_dropout = config.lora_dropout
+        self.merge_weights = config.merge_weights
+
+        self.gate_proj = MoLoRALinear(self.hidden_size, self.intermediate_size, bias=False, r=self.mix_lora_r,
+                                    lora_alpha=self.mix_lora_alpha, lora_dropout=self.lora_dropout, merge_weights=self.merge_weights, use_lbl_loss=config.use_lbl_loss, num_experts=config.num_experts, num_experts_per_token=config.num_experts_per_token)
+        self.up_proj = MoLoRALinear(self.hidden_size, self.intermediate_size, bias=False, r=self.mix_lora_r,
+                                    lora_alpha=self.mix_lora_alpha, lora_dropout=self.lora_dropout, merge_weights=self.merge_weights, use_lbl_loss=config.use_lbl_loss, num_experts=config.num_experts, num_experts_per_token=config.num_experts_per_token)
+        self.down_proj = MoLoRALinear(self.intermediate_size, self.hidden_size, bias=False, r=self.mix_lora_r,
+                                    lora_alpha=self.mix_lora_alpha, lora_dropout=self.lora_dropout, merge_weights=self.merge_weights, use_lbl_loss=config.use_lbl_loss, num_experts=config.num_experts, num_experts_per_token=config.num_experts_per_token)
+
+        
+
+
+    
 
 class MoELLamaMLP(nn.Module):
     def __init__(self, config) -> None:
@@ -197,7 +392,7 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
     def __init__(self, config: LlamaConfig):
         super().__init__(config)
         self.config = config
-        self.mlp = MoELLamaMLP(config)
+        self.mlp = MoLoRALlamaMLP(config)
     
     def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_value: Tuple[torch.Tensor] | None = None, output_attentions: bool | None = False, use_cache: bool | None = False) -> Tuple[torch.FloatTensor, Tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         residual = hidden_states
@@ -243,13 +438,14 @@ class MoELlamaModel(LlamaModel):
         super().__init__(config)
         self.config = config
         # only first some layers are processed with MoE
-        if config.moe_layer_index == -1:
-            self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
-        else:
-            moe_layer_index = config.moe_layer_index 
-            half_layer_index = moe_layer_index // 2
-            self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < moe_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
-            self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < half_layer_index or i > config.num_hidden_layers - half_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+        self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+        # if config.moe_layer_index == -1:
+        #     self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+        # else:
+        #     moe_layer_index = config.moe_layer_index 
+        #     half_layer_index = moe_layer_index // 2
+        #     self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < moe_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
+        #     self.layers = nn.ModuleList([MoELLamaDecoderLayer(config) if i < half_layer_index or i > config.num_hidden_layers - half_layer_index else LlamaDecoderLayer(config) for i in range(config.num_hidden_layers)])
             # self.layers = nn.ModuleList([])
             # for i in range(config.num_hidden_layers):
             #     cur_config = deepcopy(config)

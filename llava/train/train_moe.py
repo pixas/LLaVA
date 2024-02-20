@@ -236,7 +236,7 @@ def find_all_linear_names(model, wrap_projector=False):
     for name, module in model.named_modules():
         if any(mm_keyword in name for mm_keyword in multimodal_keywords):
             continue
-        if isinstance(module, cls):
+        if isinstance(module, cls) and not hasattr(module, 'experts'):
             names = name.split('.')
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
 
@@ -955,29 +955,36 @@ def train():
             rank0_print(moe_config)
 
             ckpt = {}
-            for each_ckpt in os.listdir(model_args.model_name_or_path):
-                if each_ckpt.endswith(".bin"):
-                    ckpt.update(torch.load(os.path.join(model_args.model_name_or_path, each_ckpt), map_location='cpu'))
-            # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
-            model_state_dict = set(list(MoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
+            # for each_ckpt in os.listdir(model_args.model_name_or_path):
+            #     if each_ckpt.endswith(".bin"):
+            #         ckpt.update(torch.load(os.path.join(model_args.model_name_or_path, each_ckpt), map_location='cpu'))
+            # # please obtain all submodule (recursively) of MoELlavaLlamaForCausalLM
+            # model_state_dict = set(list(MoELlavaLlamaForCausalLM(moe_config).state_dict().keys()))
             
-            if model_args.is_eff_moe:
-                new_state_dict = convert_eff_state_dict(model_state_dict, ckpt, model_args.num_experts)
-            else:
-                new_state_dict = convert_state_dict(model_state_dict, ckpt, model_args.num_experts)
+            # if model_args.is_eff_moe:
+            #     new_state_dict = convert_eff_state_dict(model_state_dict, ckpt, model_args.num_experts)
+            # else:
+            #     new_state_dict = convert_state_dict(model_state_dict, ckpt, model_args.num_experts)
+            # model = MoELlavaLlamaForCausalLM.from_pretrained(
+            #     model_args.model_name_or_path,
+            #     config=moe_config,
+            #     cache_dir=training_args.cache_dir,
+            #     state_dict=new_state_dict,
+            #     **bnb_model_from_pretrained_args
+            # )
             model = MoELlavaLlamaForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
                 config=moe_config,
                 cache_dir=training_args.cache_dir,
-                state_dict=new_state_dict,
                 **bnb_model_from_pretrained_args
             )
-            rank0_print(model)
             # model = LlavaLlamaForCausalLM.from_pretrained(
             #     model_args.model_name_or_path,
+            #     config=config,
             #     cache_dir=training_args.cache_dir,
             #     **bnb_model_from_pretrained_args
             # )
+            rank0_print(model)
 
             
     else:
@@ -1006,6 +1013,8 @@ def train():
     # if training_args.local_rank == 0 or training_args.local_rank == -1:
     #     for name, param in model.named_parameters():
     #         print(name)
+    # for name, value in model.named_parameters():
+    #     rank0_print(name, value.shape, value.requires_grad)
     if training_args.lora_enable:
         from peft import LoraConfig, get_peft_model
         lora_config = LoraConfig(
@@ -1062,10 +1071,12 @@ def train():
     # print(model.get_model())
     # model1 = Qformer(1024, 4096, qformer_text_input=model_args.qformer_text_input)
     # model1 = GatedLinear(1024, 4096, 3)
-    # for name, value in model1.named_parameters():
-    #     print(name, value.shape)
+    for name, p in model.get_model().named_parameters():
+        if "switch" in name:
+            p.requires_grad = True
+    for name, value in model.named_parameters():
+        rank0_print(name, value.shape, value.requires_grad)
     model.get_model().get_tokenizer(tokenizer)
-    
     # print(model.get_model().tokenizer)
     if model_args.vision_tower is not None:
         
