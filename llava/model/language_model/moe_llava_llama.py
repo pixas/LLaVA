@@ -127,8 +127,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         # Actual trainable parameters
         if r > 0:
             self.experts = nn.ModuleList([
-                LoRAModule(in_features, out_features, r)
-            for _ in range(num_experts)])
+                nn.ModuleDict({"lora_A_{}".format(i): nn.Linear(in_features, r, False),
+                               "lora_B_{}".format(i): nn.Linear(r, out_features, False)})
+            for i in range(num_experts)])
 
             # self.lora_A = nn.Parameter(self.weight.new_zeros((r, in_features)))
             # self.lora_B = nn.Parameter(self.weight.new_zeros((out_features, r)))
@@ -141,11 +142,13 @@ class MoLoRALinear(nn.Linear, LoRALayer):
 
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
-        # if hasattr(self, 'experts'):
-        #     # initialize B the same way as the default for nn.Linear and A to zero
-        #     # this is different than what is described in the paper but should not affect performance
-        #     for expert in self.experts:
-        #         expert.reset_parameters()
+        
+        if hasattr(self, 'experts'):
+            # initialize B the same way as the default for nn.Linear and A to zero
+            # this is different than what is described in the paper but should not affect performance
+            for idx, expert in enumerate(self.experts):
+                nn.init.kaiming_uniform_(expert[f'lora_A_{idx}'].weight, a=math.sqrt(5))
+                nn.init.zeros_(expert[f'lora_B_{idx}'].weight)
             # nn.init.kaiming_uniform_(self.lora_A, a=math.sqrt(5))
             # nn.init.zeros_(self.lora_B)
 
@@ -177,7 +180,7 @@ class MoLoRALinear(nn.Linear, LoRALayer):
                 moe_result, lbl_loss = self.molora_helpder(x)
             else:
                 moe_result = self.molora_helpder(x)
-            result += moe_result * self.scaling
+            result += moe_result
             # result += (self.lora_dropout(x) @ self.lora_A.transpose(0, 1) @ self.lora_B.transpose(0, 1)) * self.scaling
             return result
         else:
@@ -185,8 +188,7 @@ class MoLoRALinear(nn.Linear, LoRALayer):
     
     def molora_helpder(self, x: torch.Tensor):
         batch_size, N, d = x.shape 
-        x = x.contiguous().view(-1, d)     
-        x = self.lora_dropout(x)    
+        x = x.contiguous().view(-1, d)       
         gate_logits = self.switch(x)  # [bs * N, expert]
         weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
         weights = F.softmax(weights, dim=-1)  # [bs * N, expert]
@@ -203,7 +205,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
                 batch_idx, nth_expert = torch.where(selected_experts == i) 
                 # batch_idx: [bs * N, 1]
                 # nth_expert: [bs * N, 1]
-                expert_output = x[batch_idx] @ expert()
+                expert_output = expert['lora_B_{}'.format(i)](
+                    expert['lora_A_{}'.format(i)](self.lora_dropout(x[batch_idx]))
+                ) * self.scaling
                 # expert_output = expert(x[batch_idx])
                 results[batch_idx] += weights[batch_idx, nth_expert, None] * expert_output
                 # begin to compute load balancing loss 
@@ -223,7 +227,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
             selected_experts = selected_experts.flatten()
             weights = weights.flatten()
             for idx, expert_idx in enumerate(selected_experts):
-                results += weights[idx] * (x @ self.experts[expert_idx]())
+                results += weights[idx] * expert['lora_B_{}'.format(i)](
+                    expert['lora_A_{}'.format(i)](self.lora_dropout(x))
+                ) * self.scaling
         
         results = results.contiguous().view(batch_size, N, self.out_features)
         if self.use_lbl_loss:
@@ -652,7 +658,7 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
         input_ids, attention_mask, past_key_values, inputs_embeds, labels, expert_info = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
 
         # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
-        sta = time.time()
+        # sta = time.time()
         outputs = self.model(
             input_ids=input_ids,
             attention_mask=attention_mask,
@@ -663,7 +669,7 @@ class MoELlavaLlamaForCausalLM(MoELlamaForCausalLM, MoELlavaMetaForCausalLM):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict
         )
-        print("language model:", time.time() - sta)
+        # print("language model:", time.time() - sta)
 
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)

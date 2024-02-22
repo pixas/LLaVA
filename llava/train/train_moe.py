@@ -236,6 +236,8 @@ def find_all_linear_names(model, wrap_projector=False):
     for name, module in model.named_modules():
         if any(mm_keyword in name for mm_keyword in multimodal_keywords):
             continue
+        if "lora" in name:
+            continue
         if isinstance(module, cls) and not hasattr(module, 'experts'):
             names = name.split('.')
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
