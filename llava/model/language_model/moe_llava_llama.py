@@ -121,14 +121,15 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         # moe parameters
         self.num_experts = num_experts 
         self.num_experts_per_token = num_experts_per_token
-        self.switch = nn.Linear(in_features, num_experts)
+        if num_experts > 1:
+            self.switch = nn.Linear(in_features, num_experts)
         self.use_lbl_loss = use_lbl_loss    
         
         # Actual trainable parameters
         if r > 0:
             self.experts = nn.ModuleList([
-                nn.ModuleDict({"lora_A_{}".format(i): nn.Linear(in_features, r, False),
-                               "lora_B_{}".format(i): nn.Linear(r, out_features, False)})
+                nn.ModuleDict({"lora_A_{}".format(i): nn.Linear(in_features, r, False, dtype=torch.float32),
+                               "lora_B_{}".format(i): nn.Linear(r, out_features, False, dtype=torch.float32)})
             for i in range(num_experts)])
 
             # self.lora_A = nn.Parameter(self.weight.new_zeros((r, in_features)))
@@ -187,6 +188,11 @@ class MoLoRALinear(nn.Linear, LoRALayer):
             return F.linear(x, T(self.weight), bias=self.bias)
     
     def molora_helpder(self, x: torch.Tensor):
+        if self.num_experts <= 1:
+            expert_output = self.experts[0]['lora_B_0'](
+                self.experts[0]['lora_A_0'](self.lora_dropout(x))
+            ) * self.scaling
+            return expert_output
         batch_size, N, d = x.shape 
         x = x.contiguous().view(-1, d)       
         gate_logits = self.switch(x)  # [bs * N, expert]

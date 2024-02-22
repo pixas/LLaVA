@@ -177,7 +177,7 @@ def load_pretrained_moe_model(model_path, model_base, model_name, load_8bit=Fals
             lora_cfg_pretrained = AutoConfig.from_pretrained(model_path)
             tokenizer = AutoTokenizer.from_pretrained(model_base, use_fast=False)
             print('Loading LLaVA from base model...')
-
+            print(lora_cfg_pretrained)
             ckpt = {}
             for each_ckpt in os.listdir(model_base):
                 if each_ckpt.endswith(".bin"):

@@ -1034,7 +1034,10 @@ def train():
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
         model = get_peft_model(model, lora_config)
-
+    for name, param in model.named_parameters():
+        if "lora" in name:
+            param.dtype = torch.float32
+            
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             model_args.model_name_or_path,
@@ -1077,7 +1080,7 @@ def train():
         if "switch" in name:
             p.requires_grad = True
     for name, value in model.named_parameters():
-        rank0_print(name, value.shape, value.requires_grad)
+        rank0_print(name, value.shape, value.dtype, value.requires_grad)
     model.get_model().get_tokenizer(tokenizer)
     # print(model.get_model().tokenizer)
     if model_args.vision_tower is not None:
