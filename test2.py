@@ -14,16 +14,12 @@
 #     # print("===")
 #     print(key, value.shape, value.dtype)
 import torch
- 
-cls = list 
+import torch.nn.functional as F  
+import torch.nn as nn 
+import os 
 
-class MyList(list):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.append(1)
-        self.append(2)
-        self.experts = 3
-    
-    
-a = MyList([1, 2, 3])
-print(isinstance(a, cls) and not hasattr(a, "experts"))
+model_state_dict_path = "~/syjiang/checkpoints/llava-v1.5-7b-moe-molora-4x2-trial-nolbl-lora/checkpoint-100/adapter_model.bin"
+
+state_dict = torch.load(os.path.expanduser(model_state_dict_path), map_location='cpu')
+for k, v in state_dict.items():
+    print(k)

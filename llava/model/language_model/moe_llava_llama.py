@@ -30,6 +30,9 @@ from copy import deepcopy
 from ..moe_llava_arch import MoELlavaMetaModel, MoELlavaMetaForCausalLM
 from transformers.utils import logging
 import math 
+from peft.utils import _get_submodules
+from peft.tuners.lora import mark_only_lora_as_trainable
+
 
 logger = logging.get_logger(__name__)
 
@@ -41,7 +44,51 @@ class MoEBaseModelOutputWithPast(ModelOutput):
     attentions: Optional[Tuple[torch.FloatTensor]] = None
     lbl_loss: list = None
 
+def check_target_module_exists(lora_config, key, target_modules):
+    target_module_found = any(key.endswith(module_name) for module_name in target_modules)
+    return target_module_found
 
+def create_mixoflora_module(lora_config, target, num_experts, num_experts_per_token):
+    in_features, out_features = target.in_features, target.out_features
+    new_module = MoLoRALinear(in_features, out_features, num_experts, num_experts_per_token,
+                              r=lora_config.r,
+                              lora_alpha=lora_config.lora_alpha,
+                              lora_dropout=lora_config.lora_dropout,)
+    return new_module
+def get_mixoflora_model(model, num_experts, num_experts_per_token, lora_config, inference_mode=False):
+    # find linear modules with "switch" in their attributes
+    key_list = [key for key, _ in model.named_modules()]
+    target_module_names = set()
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):
+            if isinstance(model.get_submodule(".".join(name.split(".")[:-2])), MoELLamaDecoderLayer) and "mlp" in name:
+                names = name.split(".")
+                target_module_names.add(names[0] if len(names) == 1 else names[-1])
+    target_module_names = list(target_module_names)
+    
+    for key in key_list:
+        if not check_target_module_exists(lora_config, key, target_module_names):
+            continue
+            
+        parent, target, target_name = _get_submodules(model, key)
+        new_module = create_mixoflora_module(lora_config, target, num_experts, num_experts_per_token)
+        setattr(parent, target_name, new_module)
+        new_module.weight = target.weight 
+        if hasattr(target, "bias"):
+            if target.bias is not None:
+                new_module.bias = target.bias
+        
+        if getattr(target, "state", None) is not None:
+            new_module.state = target.state
+            new_module.to(target.weight.device)
+        
+    mark_only_lora_as_trainable(model, lora_config.bias)
+    if inference_mode:
+        for n, p in model.named_parameters():
+            if "lora" in n:
+                p.requires_grad = False
+    
+    return model
 
 class MoELlamaConfig(LlamaConfig):
     model_type = "moe_llama"
@@ -145,6 +192,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         nn.Linear.reset_parameters(self)
         
         if hasattr(self, 'experts'):
+            # for idx, expert in enumerate(self.experts):
+            #     expert[f'lora_A_{idx}'] = expert[f'lora_A_{idx}'].to(torch.float32)
+            #     expert[f'lora_B_{idx}'] = expert[f'lora_B_{idx}'].to(torch.float32)
             # initialize B the same way as the default for nn.Linear and A to zero
             # this is different than what is described in the paper but should not affect performance
             for idx, expert in enumerate(self.experts):
@@ -157,6 +207,12 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         def T(w):
             return w.transpose(0, 1) if self.fan_in_fan_out else w
         nn.Linear.train(self, mode)
+        # for idx, expert in enumerate(self.experts):
+        #     expert[f'lora_A_{idx}'].train(mode)
+        #     expert[f'lora_A_{idx}'] = expert[f'lora_A_{idx}'].to(torch.float32)
+        #     expert[f'lora_B_{idx}'].train(mode)
+        #     expert[f'lora_B_{idx}'] = expert[f'lora_B_{idx}'].to(torch.float32)
+            
         # if mode:
         #     if self.merge_weights and self.merged:
         #         # Make sure that the weights are not merged
@@ -180,12 +236,32 @@ class MoLoRALinear(nn.Linear, LoRALayer):
             if self.use_lbl_loss:
                 moe_result, lbl_loss = self.molora_helpder(x)
             else:
-                moe_result = self.molora_helpder(x)
+                moe_result = self.molora_helper2(x)
             result += moe_result
             # result += (self.lora_dropout(x) @ self.lora_A.transpose(0, 1) @ self.lora_B.transpose(0, 1)) * self.scaling
             return result
         else:
             return F.linear(x, T(self.weight), bias=self.bias)
+    
+    def molora_helper2(self, x: torch.Tensor):
+        previous_dtype = x.dtype 
+        batch_size, N, d = x.shape 
+        x = x.contiguous().view(-1, d)
+        x = x.to(self.experts[0]['lora_A_0'].weight.dtype)
+        gate_logits = self.switch(x)  # [bs * N, expert]
+        temp_results = torch.stack([expert[f'lora_B_{i}'](expert[f'lora_A_{i}'](x)) * self.scaling for i, expert in enumerate(self.experts)], dim=0)  # [expert, bs * N, out_features]
+        temp_results = temp_results.transpose(0, 1)  # [bs * N, expert, out_features]
+        weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
+        # given a tensor with shape [b, N, d] and a index tensor [b, k]
+        # how to obtain a tensor with shape [b, k, d]?
+        
+        selected_results = temp_results.gather(1, selected_experts.unsqueeze(-1).expand(-1, -1, self.out_features))  # [bs * N, select_expert, out_features]
+        assert selected_results.shape == (batch_size * N, self.num_experts_per_token, self.out_features)
+        weights = F.softmax(weights, dim=-1)  # [bs * N, expert]
+        results = torch.einsum("be, bef -> bf", weights, selected_results)
+        results = results.contiguous().view(batch_size, N, -1)
+        results = results.to(previous_dtype)
+        return results
     
     def molora_helpder(self, x: torch.Tensor):
         if self.num_experts <= 1:
@@ -194,10 +270,12 @@ class MoLoRALinear(nn.Linear, LoRALayer):
             ) * self.scaling
             return expert_output
         batch_size, N, d = x.shape 
+        previous_dtype = x.dtype
         x = x.contiguous().view(-1, d)       
         gate_logits = self.switch(x)  # [bs * N, expert]
         weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
         weights = F.softmax(weights, dim=-1)  # [bs * N, expert]
+        x = x.to(self.experts[0]['lora_A_0'].weight.dtype)
         results = torch.zeros((batch_size * N, self.out_features)).to(x) # bs*N, d
         load_balancing_loss = 0
         # compute load balancing loss
@@ -211,6 +289,8 @@ class MoLoRALinear(nn.Linear, LoRALayer):
                 batch_idx, nth_expert = torch.where(selected_experts == i) 
                 # batch_idx: [bs * N, 1]
                 # nth_expert: [bs * N, 1]
+                # print(expert['lora_A_{}'.format(i)].weight.dtype,
+                #       expert['lora_B_{}'.format(i)].weight.dtype)
                 expert_output = expert['lora_B_{}'.format(i)](
                     expert['lora_A_{}'.format(i)](self.lora_dropout(x[batch_idx]))
                 ) * self.scaling
@@ -220,13 +300,13 @@ class MoLoRALinear(nn.Linear, LoRALayer):
                 # compute the number of tokens routed to each expert
                 # compute the fraction of tokens routed to each expert
                 # 选择第i个expert的token数量
-                num_per_expert = len(batch_idx)
-                # 选择第i个expert的token 比例，对应公式中的f_i
-                fraction_per_expert = num_per_expert / (batch_size * N)
-                # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
-                prob_per_expert = weights[batch_idx, nth_expert, None].mean()
-                load_balancing_loss += fraction_per_expert * prob_per_expert
-            load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
+                # num_per_expert = len(batch_idx)
+                # # 选择第i个expert的token 比例，对应公式中的f_i
+                # fraction_per_expert = num_per_expert / (batch_size * N)
+                # # 选择第i个expert的所有token的概率的均值，对应公式中的P_i
+                # prob_per_expert = weights[batch_idx, nth_expert, None].mean()
+                # load_balancing_loss += fraction_per_expert * prob_per_expert
+            # load_balancing_loss = load_balancing_loss * self.num_experts / (self.num_experts_per_token * self.num_experts_per_token)
         else:
             assert selected_experts.shape[0] == 1
             
@@ -238,6 +318,7 @@ class MoLoRALinear(nn.Linear, LoRALayer):
                 ) * self.scaling
         
         results = results.contiguous().view(batch_size, N, self.out_features)
+        results = results.to(previous_dtype)
         if self.use_lbl_loss:
             return results, load_balancing_loss
         else:
@@ -402,7 +483,7 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
     def __init__(self, config: LlamaConfig):
         super().__init__(config)
         self.config = config
-        self.mlp = MoLoRALlamaMLP(config)
+        # self.mlp = MoLoRALlamaMLP(config)
     
     def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_value: Tuple[torch.Tensor] | None = None, output_attentions: bool | None = False, use_cache: bool | None = False) -> Tuple[torch.FloatTensor, Tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         residual = hidden_states

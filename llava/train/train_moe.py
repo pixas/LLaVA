@@ -32,6 +32,7 @@ from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
 from llava.model import *
+from llava.model.language_model.moe_llava_llama import get_mixoflora_model, MoELLamaDecoderLayer
 from llava.model.utils import convert_state_dict, convert_eff_state_dict
 from llava.mm_utils import tokenizer_image_token
 from llava.model.multimodal_projector.builder import Qformer, GatedLinear
@@ -208,7 +209,7 @@ def get_peft_state_maybe_zero_3(named_params, bias):
 
 
 def get_peft_state_non_lora_maybe_zero_3(named_params, require_grad_only=True):
-    to_return = {k: t for k, t in named_params if "lora_" not in k}
+    to_return = {k: t for k, t in named_params if "lora_" not in k or ("lora_" in k and "experts" in k)}
     if require_grad_only:
         to_return = {k: t for k, t in to_return.items() if t.requires_grad}
     to_return = {k: maybe_zero_3(v, ignore_status=True).cpu() for k, v in to_return.items()}
@@ -236,9 +237,10 @@ def find_all_linear_names(model, wrap_projector=False):
     for name, module in model.named_modules():
         if any(mm_keyword in name for mm_keyword in multimodal_keywords):
             continue
-        if "lora" in name:
+        if isinstance(model.get_submodule(".".join(name.split(".")[:-2])), MoELLamaDecoderLayer) and isinstance(module, cls) and "mlp" in name:
             continue
-        if isinstance(module, cls) and not hasattr(module, 'experts'):
+        # if isinstance(module, cls) and not hasattr(module, 'experts'):
+        if isinstance(module, cls):
             names = name.split('.')
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
 
@@ -1029,15 +1031,26 @@ def train():
         )
         if training_args.bits == 16:
             if training_args.bf16:
-                model.to(torch.bfloat16)
+                for name, param in model.named_parameters():
+                    if "lora" not in name:
+                        param.data = param.data.to(torch.bfloat16)
+                    else:
+                        param.data = param.data.to(torch.float32)
+                    
+                # model.to(torch.bfloat16)
             if training_args.fp16:
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
         model = get_peft_model(model, lora_config)
+    
     for name, param in model.named_parameters():
-        if "lora" in name:
-            param.dtype = torch.float32
-            
+        # print the first 10 layers parameters information
+        
+        rank0_print(name, param.dtype, param.requires_grad)
+    model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
+    for name, param in model.named_parameters():
+        rank0_print(name, param.dtype, param.requires_grad)
+    
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
             model_args.model_name_or_path,
@@ -1079,8 +1092,8 @@ def train():
     for name, p in model.get_model().named_parameters():
         if "switch" in name:
             p.requires_grad = True
-    for name, value in model.named_parameters():
-        rank0_print(name, value.shape, value.dtype, value.requires_grad)
+    # for name, value in model.named_parameters():
+    #     rank0_print(name, value.shape, value.dtype, value.requires_grad)
     model.get_model().get_tokenizer(tokenizer)
     # print(model.get_model().tokenizer)
     if model_args.vision_tower is not None:
@@ -1168,7 +1181,8 @@ def train():
                     args=training_args,
                     **data_module)
 
-
+    # for name, param in trainer.model.named_parameters():
+    #     rank0_print(name, param.requires_grad, param.dtype)
     if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
         trainer.train(resume_from_checkpoint=True)
     else:
