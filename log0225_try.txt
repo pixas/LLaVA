@@ -4107,3 +4107,5 @@ WARNING: tokenization mismatch: 1 vs. 737. (ignored)
 {'loss': 0.8855, 'learning_rate': 0.000148062826705594, 'epoch': 0.36}
 {'loss': 0.8384, 'learning_rate': 0.00014800816672354877, 'epoch': 0.36}
 {'loss': 0.8757, 'learning_rate': 0.00014795348809568476, 'epoch': 0.36}
+{'loss': 0.8311, 'learning_rate': 0.00014789879084323857, 'epoch': 0.36}
+{'loss': 0.8806, 'learning_rate': 0.00014784407498745394, 'epoch': 0.36}
