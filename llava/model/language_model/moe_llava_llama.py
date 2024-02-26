@@ -483,7 +483,7 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
     def __init__(self, config: LlamaConfig):
         super().__init__(config)
         self.config = config
-        # self.mlp = MoLoRALlamaMLP(config)
+        self.mlp = MoLoRALlamaMLP(config)
     
     def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_value: Tuple[torch.Tensor] | None = None, output_attentions: bool | None = False, use_cache: bool | None = False) -> Tuple[torch.FloatTensor, Tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         residual = hidden_states

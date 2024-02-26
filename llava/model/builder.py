@@ -194,8 +194,8 @@ def load_pretrained_moe_model(model_path, model_base, model_name, load_8bit=Fals
                 new_state_dict = convert_state_dict(model_state_dict, ckpt, lora_cfg_pretrained.num_experts)
                 model = MoELlavaLlamaForCausalLM.from_pretrained(model_base, low_cpu_mem_usage=True, config=lora_cfg_pretrained, state_dict=new_state_dict, **kwargs)
                 incompatible_keys = model.load_state_dict(new_state_dict, strict=False)
-            print(incompatible_keys)
-            print(lora_cfg_pretrained)
+            # print(incompatible_keys)
+            # print(lora_cfg_pretrained)
             token_num, tokem_dim = model.lm_head.out_features, model.lm_head.in_features
             if model.lm_head.weight.shape[0] != token_num:
                 model.lm_head.weight = torch.nn.Parameter(torch.empty(token_num, tokem_dim, device=model.device, dtype=model.dtype))
@@ -217,8 +217,9 @@ def load_pretrained_moe_model(model_path, model_base, model_name, load_8bit=Fals
             non_lora_trainables = {(k[11:] if k.startswith('base_model.') else k): v for k, v in non_lora_trainables.items()}
             if any(k.startswith('model.model.') for k in non_lora_trainables):
                 non_lora_trainables = {(k[6:] if k.startswith('model.') else k): v for k, v in non_lora_trainables.items()}
-            model.load_state_dict(non_lora_trainables, strict=False)
-
+            
+            incompatible_keys = model.load_state_dict(non_lora_trainables, strict=False)
+            print(incompatible_keys)
             from peft import PeftModel
             print('Loading LoRA weights...')
             model = PeftModel.from_pretrained(model, model_path)

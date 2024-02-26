@@ -1047,9 +1047,11 @@ def train():
         # print the first 10 layers parameters information
         
         rank0_print(name, param.dtype, param.requires_grad)
-    model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
-    for name, param in model.named_parameters():
-        rank0_print(name, param.dtype, param.requires_grad)
+    
+    # new lora version
+    # model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
+    # for name, param in model.named_parameters():
+    #     rank0_print(name, param.dtype, param.requires_grad)
     
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
