@@ -18,8 +18,11 @@ import torch.nn.functional as F
 import torch.nn as nn 
 import os 
 
-model_state_dict_path = "~/syjiang/checkpoints/llava-v1.5-7b-moe-4x2-l8-nolbl-lora/non_lora_trainables.bin"
+# model_state_dict_path = "/remote-home/yushengliao/syjiang/checkpoints/llava-v1.5-7b-moe-molora-4x2-1share-nobug-nolbl-lora/non_lora_trainables.bin"
 
-state_dict = torch.load(os.path.expanduser(model_state_dict_path), map_location='cpu')
-for k, v in state_dict.items():
-    print(k)
+# state_dict = torch.load(os.path.expanduser(model_state_dict_path), map_location='cpu')
+# for k, v in state_dict.items():
+#     print(k)
+x = torch.randn(30, 2)
+y = torch.cat([x, torch.ones(30, 1).to(x)], dim=-1)
+print(y)

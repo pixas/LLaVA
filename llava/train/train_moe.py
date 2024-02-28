@@ -74,6 +74,7 @@ class ModelArguments:
     num_experts_per_token: Optional[int] = field(default=2)
     moe_layer_index: Optional[int] = field(default=-1)
     is_eff_moe: Optional[bool] = field(default=False)
+    share_expert: Optional[bool] = field(default=False)
     
     qformer_text_input: Optional[bool] = field(default=False)
     qformer_use_pretrained: Optional[bool] = field(default=False)
@@ -239,7 +240,8 @@ def find_all_linear_names(model, wrap_projector=False):
             continue
         if isinstance(model.get_submodule(".".join(name.split(".")[:-2])), MoELLamaDecoderLayer) and isinstance(module, cls) and "mlp" in name:
             continue
-        # if isinstance(module, cls) and not hasattr(module, 'experts'):
+        # if isinstance(module, cls) and "experts" in name:
+        #     continue
         if isinstance(module, cls):
             names = name.split('.')
             lora_module_names.add(names[0] if len(names) == 1 else names[-1])
@@ -950,6 +952,7 @@ def train():
             moe_config.num_experts = model_args.num_experts 
             moe_config.num_experts_per_token = model_args.num_experts_per_token
             moe_config.is_sparse = model_args.is_moe_sparse
+            moe_config.share_expert = model_args.share_expert
             moe_config.architectures = ["MoELLamaForCausalLM"]
             if model_args.is_eff_moe:
                 moe_config.intermediate_size = moe_config.intermediate_size // moe_config.num_experts
@@ -988,7 +991,6 @@ def train():
             #     cache_dir=training_args.cache_dir,
             #     **bnb_model_from_pretrained_args
             # )
-            rank0_print(model)
 
             
     else:
@@ -1031,27 +1033,28 @@ def train():
         )
         if training_args.bits == 16:
             if training_args.bf16:
-                for name, param in model.named_parameters():
-                    if "lora" not in name:
-                        param.data = param.data.to(torch.bfloat16)
-                    else:
-                        param.data = param.data.to(torch.float32)
+                # for name, param in model.named_parameters():
+                #     if "lora" not in name:
+                #         param.data = param.data.to(torch.bfloat16)
+                #     else:
+                #         param.data = param.data.to(torch.float32)
                     
-                # model.to(torch.bfloat16)
+                model.to(torch.bfloat16)
             if training_args.fp16:
                 model.to(torch.float16)
         rank0_print("Adding LoRA adapters...")
         model = get_peft_model(model, lora_config)
     
-    for name, param in model.named_parameters():
+    # for name, param in model.named_parameters():
         # print the first 10 layers parameters information
         
-        rank0_print(name, param.dtype, param.requires_grad)
+        # rank0_print(name, param.dtype, param.requires_grad)
     
     # new lora version
-    # model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
+    model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
     # for name, param in model.named_parameters():
     #     rank0_print(name, param.dtype, param.requires_grad)
+    rank0_print(model)
     
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(

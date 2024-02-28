@@ -94,7 +94,8 @@ class MoELlamaConfig(LlamaConfig):
     model_type = "moe_llama"
     def __init__(self, vocab_size=32000, hidden_size=4096, intermediate_size=11008, num_hidden_layers=32, num_attention_heads=32, num_key_value_heads=None, hidden_act="silu", max_position_embeddings=2048, initializer_range=0.02, rms_norm_eps=0.000001, use_cache=True, pad_token_id=0, bos_token_id=1, eos_token_id=2, pretraining_tp=1, tie_word_embeddings=False, rope_scaling=None, 
                  num_experts=4, num_experts_per_token=2, is_sparse=True, moe_layer_index=-1, is_eff_moe=False, use_lbl_loss=False, 
-                 mix_lora_r=128, mix_lora_alpha=256, lora_dropout=0.0, merge_weights=False,**kwargs):
+                 mix_lora_r=128, mix_lora_alpha=256, lora_dropout=0.0, merge_weights=False,
+                 share_expert=False, **kwargs):
         self.num_experts = num_experts
         self.num_experts_per_token = num_experts_per_token
         self.is_sparse = is_sparse
@@ -105,6 +106,7 @@ class MoELlamaConfig(LlamaConfig):
         self.mix_lora_alpha = mix_lora_alpha
         self.lora_dropout = lora_dropout
         self.merge_weights = merge_weights
+        self.share_expert = share_expert
         super().__init__(vocab_size, hidden_size, intermediate_size, num_hidden_layers, num_attention_heads, num_key_value_heads, hidden_act, max_position_embeddings, initializer_range, rms_norm_eps, use_cache, pad_token_id, bos_token_id, eos_token_id, pretraining_tp, tie_word_embeddings, rope_scaling, **kwargs)
         
 
@@ -158,6 +160,7 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         fan_in_fan_out: bool = False, # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
         merge_weights: bool = True,
         use_lbl_loss: bool = False,
+        share_expert: bool = False,
         **kwargs
     ):
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
@@ -168,6 +171,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         # moe parameters
         self.num_experts = num_experts 
         self.num_experts_per_token = num_experts_per_token
+        self.share_expert = share_expert
+        if self.share_expert:
+            self.num_experts_per_token -= 1
         if num_experts > 1:
             self.switch = nn.Linear(in_features, num_experts)
         self.use_lbl_loss = use_lbl_loss    
@@ -248,8 +254,13 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         batch_size, N, d = x.shape 
         x = x.contiguous().view(-1, d)
         x = x.to(self.experts[0]['lora_A_0'].weight.dtype)
+        if self.share_expert:
+            share_result = self.experts[0][f'lora_B_0'](self.experts[0][f'lora_A_0'](x)) * self.scaling
         gate_logits = self.switch(x)  # [bs * N, expert]
-        temp_results = torch.stack([expert[f'lora_B_{i}'](expert[f'lora_A_{i}'](x)) * self.scaling for i, expert in enumerate(self.experts)], dim=0)  # [expert, bs * N, out_features]
+        if self.share_expert:
+            temp_results = torch.stack([expert[f'lora_B_{i}'](expert[f'lora_A_{i}'](x)) * self.scaling for i, expert in enumerate(self.experts[1:])], dim=0)  # [expert, bs * N, out_features]
+        else:
+            temp_results = torch.stack([expert[f'lora_B_{i}'](expert[f'lora_A_{i}'](x)) * self.scaling for i, expert in enumerate(self.experts)], dim=0)  # [expert, bs * N, out_features]
         temp_results = temp_results.transpose(0, 1)  # [bs * N, expert, out_features]
         weights, selected_experts = torch.topk(gate_logits, self.num_experts_per_token)
         # given a tensor with shape [b, N, d] and a index tensor [b, k]
@@ -257,6 +268,13 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         
         selected_results = temp_results.gather(1, selected_experts.unsqueeze(-1).expand(-1, -1, self.out_features))  # [bs * N, select_expert, out_features]
         assert selected_results.shape == (batch_size * N, self.num_experts_per_token, self.out_features)
+        if self.share_expert:
+            weights = torch.cat([weights, torch.ones(weights.shape[0], 1).to(weights)], dim=-1)
+            selected_results = torch.cat([
+                selected_results,
+                share_result.unsqueeze(1)
+            ], dim=1)
+
         weights = F.softmax(weights, dim=-1)  # [bs * N, expert]
         results = torch.einsum("be, bef -> bf", weights, selected_results)
         results = results.contiguous().view(batch_size, N, -1)
@@ -483,7 +501,7 @@ class MoELLamaDecoderLayer(LlamaDecoderLayer):
     def __init__(self, config: LlamaConfig):
         super().__init__(config)
         self.config = config
-        self.mlp = MoLoRALlamaMLP(config)
+        # self.mlp = MoLoRALlamaMLP(config)
     
     def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor | None = None, position_ids: torch.LongTensor | None = None, past_key_value: Tuple[torch.Tensor] | None = None, output_attentions: bool | None = False, use_cache: bool | None = False) -> Tuple[torch.FloatTensor, Tuple[torch.FloatTensor, torch.FloatTensor] | None]:
         residual = hidden_states
