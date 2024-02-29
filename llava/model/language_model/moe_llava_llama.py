@@ -240,9 +240,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
             result = F.linear(x, T(self.weight), bias=self.bias)
             # sta = time.time()
             if self.use_lbl_loss:
-                moe_result, lbl_loss = self.molora_helpder(x)
+                moe_result, lbl_loss = self.molora_helper(x)
             else:
-                moe_result = self.molora_helper2(x)
+                moe_result = self.molora_helper(x)
             result += moe_result
             # result += (self.lora_dropout(x) @ self.lora_A.transpose(0, 1) @ self.lora_B.transpose(0, 1)) * self.scaling
             return result
@@ -281,7 +281,7 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         results = results.to(previous_dtype)
         return results
     
-    def molora_helpder(self, x: torch.Tensor):
+    def molora_helper(self, x: torch.Tensor):
         if self.num_experts <= 1:
             expert_output = self.experts[0]['lora_B_0'](
                 self.experts[0]['lora_A_0'](self.lora_dropout(x))
