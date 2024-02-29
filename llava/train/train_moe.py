@@ -186,7 +186,7 @@ def merge_lora(model_path, **kwargs):
 # Borrowed from peft.utils.get_peft_model_state_dict
 def get_peft_state_maybe_zero_3(named_params, bias):
     if bias == "none":
-        to_return = {k: t for k, t in named_params if "lora_" in k}
+        to_return = {k: t for k, t in named_params if "lora_" in k and "experts" not in k}
     elif bias == "all":
         to_return = {k: t for k, t in named_params if "lora_" in k or "bias" in k}
     elif bias == "lora_only":

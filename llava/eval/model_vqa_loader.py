@@ -7,7 +7,7 @@ import shortuuid
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 from llava.conversation import conv_templates, SeparatorStyle
-from llava.model.builder import load_pretrained_model, load_pretrained_moe_model
+from llava.model.builder import load_pretrained_model, load_pretrained_moe_model, load_pretrained_molora_model
 from llava.utils import disable_torch_init
 from llava.mm_utils import tokenizer_image_token, process_images, get_model_name_from_path
 from torch.utils.data import Dataset, DataLoader
@@ -74,6 +74,8 @@ def eval_model(args):
     disable_torch_init()
     model_path = os.path.expanduser(args.model_path)
     model_name = get_model_name_from_path(model_path)
+    if "moe" in model_name.lower() and "molora" in model_name.lower():
+        tokenizer, model, image_processor, context_len = load_pretrained_molora_model(model_path, args.model_base, model_name)
     if "moe" in model_name.lower():
         tokenizer, model, image_processor, context_len = load_pretrained_moe_model(model_path, args.model_base, model_name)
     else:
