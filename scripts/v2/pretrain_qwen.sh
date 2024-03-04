@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --ntasks-per-node=1    
 #SBATCH --mem-per-cpu=8G  
-#SBATCH --output=logs/qwen1.8b_pretrain.out
+#SBATCH --output=logs/qwen1.8b_pretrain2.out
 ###SBATCH --kill-on-bad-exit=1
 
 nodes=( $( scontrol show hostnames $SLURM_JOB_NODELIST ) )
@@ -43,11 +43,11 @@ srun --jobid $SLURM_JOBID python -u -m torch.distributed.run \
     --mm_use_im_start_end False \
     --mm_use_im_patch_token False \
     --bf16 True \
-    --output_dir /remote-home/syjiang/checkpoints/qwen1.5-1.8b-pretrain \
+    --output_dir /remote-home/syjiang/checkpoints/qwen1.5-1.8b-pretrain2 \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 8 \
+    --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 16 \
+    --gradient_accumulation_steps 8 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 100 \

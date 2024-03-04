@@ -14,6 +14,7 @@ class SeparatorStyle(Enum):
     BLOOM = auto()
     LLAMA_2 = auto()
     PLAIN = auto()
+    MPT = auto()
     
 
 

@@ -1046,6 +1046,7 @@ def train():
 
             moe_config.share_expert = model_args.share_expert
             moe_config.architectures = ["MoLoRAQwen2ForCausalLM"]
+            moe_config._attn_implementation = "flash_attention_2"
             rank0_print(moe_config)
             model = MoLoRAQwenvQwen2ForCausalLM.from_pretrained(
                 model_args.model_name_or_path,
@@ -1192,12 +1193,16 @@ def train():
     elif model_args.version == "v0.5":
         tokenizer.pad_token = tokenizer.unk_token
     elif model_args.version == "qwen":
+        tokenizer.pad_token_id = 151643  # follow official setting
         if model_args.version in conversation_lib.conv_templates:
             conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
         else:
             conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
     else:
-        tokenizer.pad_token = tokenizer.unk_token
+        if "qwen" in model_args.model_name_or_path.lower():
+            tokenizer.pad_token_id = 151643
+        else:
+            tokenizer.pad_token = tokenizer.unk_token
         if model_args.version in conversation_lib.conv_templates:
             conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
         else:
