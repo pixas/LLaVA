@@ -1,0 +1,191 @@
+#    Copyright 2023 Haotian Liu
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+
+from typing import List, Optional, Tuple, Union
+
+import torch
+import torch.nn as nn
+from torch.nn import CrossEntropyLoss
+
+from transformers import AutoConfig, AutoModelForCausalLM, \
+                         LlamaConfig, LlamaModel, LlamaForCausalLM
+from transformers import Qwen2Config, Qwen2Model, Qwen2ForCausalLM
+
+from transformers.modeling_outputs import CausalLMOutputWithPast
+
+from ..llava_arch import LlavaMetaModel, LlavaMetaForCausalLM
+
+
+class MoLoRAQwen2Config(Qwen2Config):
+    def __init__(self, *args, num_experts=2, num_experts_per_token=1, lora_dropout=0.0,
+                 share_expert=False, **kwargs):
+        super(MoLoRAQwen2Config, self).__init__(*args, **kwargs)
+        self.num_experts = num_experts
+        self.num_experts_per_token = num_experts_per_token
+        self.lora_dropout = lora_dropout
+        self.share_expert = share_expert
+    
+
+
+class MoLoRAQwenV2Config(MoLoRAQwen2Config):
+    model_type = "moe_qwenv"
+
+
+class MoLoRAQwen2Model(Qwen2Model):
+    def __init__(self, config: MoLoRAQwen2Config):
+        super(MoLoRAQwen2Model, self).__init__(config)
+        self.num_experts = config.num_experts
+        self.num_experts_per_token = config.num_experts_per_token
+        self.lora_dropout = config.lora_dropout
+        self.share_expert = config.share_expert
+
+class MoLoRAQwenvQwen2Model(LlavaMetaModel, MoLoRAQwen2Model):
+    config_class = MoLoRAQwenV2Config
+
+    def __init__(self, config: MoLoRAQwen2Config):
+        super(MoLoRAQwenvQwen2Model, self).__init__(config)
+
+# class MoELlavaLlamaModel(LlavaMetaModel, LlamaModel):
+#     config_class = MoELlavaConfig
+    
+#     def __init__(self, config: MoELlamaConfig):
+#         super(MoELlavaLlamaModel, self).__init__(config)
+class MoLoRAQwen2ForCausalLM(Qwen2ForCausalLM):
+    config_class = MoLoRAQwen2Config
+    def __init__(self, config):
+        super().__init__(config)
+        self.model = MoLoRAQwen2Model(config)
+        # self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        # self.load_balancing_loss_ceof = 0.01
+        # Initialize weights and apply final processing
+        self.post_init()
+
+class MoLoRAQwenvQwen2ForCausalLM(MoLoRAQwen2ForCausalLM, LlavaMetaForCausalLM):
+    config_class = MoLoRAQwenV2Config
+
+    def __init__(self, config):
+        super(MoLoRAQwen2ForCausalLM, self).__init__(config)
+        self.model = MoLoRAQwenvQwen2Model(config)
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.load_balancing_loss_ceof = 0.01
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    def get_model(self):
+        return self.model
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        past_key_values: Optional[List[torch.FloatTensor]] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        images: Optional[torch.FloatTensor] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        input_ids, attention_mask, past_key_values, inputs_embeds, labels, expert_info = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
+
+        # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
+        outputs = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            past_key_values=past_key_values,
+            inputs_embeds=inputs_embeds,
+            use_cache=use_cache,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict
+        )
+
+        hidden_states = outputs[0]
+        logits = self.lm_head(hidden_states)
+
+        loss = None
+        if labels is not None:
+            # Shift so that tokens < n predict n
+            shift_logits = logits[..., :-1, :].contiguous()
+            shift_labels = labels[..., 1:].contiguous()
+            # Flatten the tokens
+            loss_fct = CrossEntropyLoss()
+            shift_logits = shift_logits.view(-1, self.config.vocab_size)
+            shift_labels = shift_labels.view(-1)
+            # Enable model/pipeline parallelism
+            shift_labels = shift_labels.to(shift_logits.device)
+            loss = loss_fct(shift_logits, shift_labels)
+
+            if expert_info is not None:
+                counts, route_prob, n_dropped, route_prob_max = list(expert_info.values())
+                total = counts.sum(dim=-1, keepdims=True)
+                n_experts = counts.shape[0]
+                # Fraction of tokens routed to each expert
+                # $$f_i = \frac{1}{T} \sum_{x \in \mathscr{B}} \mathbf{1} \{ \mathop{argmax} p(x), i \}$$
+                # $f_i$ is the count of tokens where the argmax of $p(x)$ is equal to $i$.
+                route_frac = counts / total
+                # Mean routing probability
+                # $$P_i = \frac{1}{T} \sum_{x \in \mathscr{B}} p_i (x)$$
+                route_prob = route_prob / total
+                # Load balancing loss
+                # $$\mathscr{L} = N \sum_{i=1}^N f_i \cdot P_i$$
+                # $\mathscr{L}$ is the loss for a single layer and here we are
+                # taking the sum of losses across all layers.
+                load_balancing_loss = n_experts * (route_frac * route_prob).sum()
+                loss = loss + self.load_balancing_loss_ceof * load_balancing_loss
+                
+        if not return_dict:
+            output = (logits,) + outputs[1:]
+            return (loss,) + output if loss is not None else output
+
+        return CausalLMOutputWithPast(
+            loss=loss,
+            logits=logits,
+            past_key_values=outputs.past_key_values,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+    def prepare_inputs_for_generation(
+        self, input_ids, past_key_values=None, attention_mask=None, inputs_embeds=None, **kwargs
+    ):
+        if past_key_values:
+            input_ids = input_ids[:, -1:]
+
+        # if `inputs_embeds` are passed, we only want to use them in the 1st generation step
+        if inputs_embeds is not None and past_key_values is None:
+            model_inputs = {"inputs_embeds": inputs_embeds}
+        else:
+            model_inputs = {"input_ids": input_ids}
+
+        model_inputs.update(
+            {
+                "past_key_values": past_key_values,
+                "use_cache": kwargs.get("use_cache"),
+                "attention_mask": attention_mask,
+                "images": kwargs.get("images", None),
+            }
+        )
+        return model_inputs
+
+AutoConfig.register("moe_qwenv", MoLoRAQwenV2Config)
+AutoModelForCausalLM.register(MoLoRAQwenV2Config, MoLoRAQwenvQwen2ForCausalLM)

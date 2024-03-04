@@ -619,6 +619,89 @@ def preprocess_v1(
         labels=targets,
     )
 
+def preprocess_qwen(sources,
+    tokenizer: transformers.PreTrainedTokenizer,
+    has_image: bool = False
+) -> Dict:
+    conv = conversation_lib.default_conversation.copy()
+    roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
+
+    # Apply prompt templates
+    conversations = []
+    for i, source in enumerate(sources):
+        if roles[source[0]["from"]] != conv.roles[0]:
+            # Skip the first one if it is not from human
+            source = source[1:]
+
+        conv.messages = []
+        for j, sentence in enumerate(source):
+            role = roles[sentence["from"]]
+            assert role == conv.roles[j % 2], f"{i}"
+            conv.append_message(role, sentence["value"])
+        conversations.append(conv.get_prompt())
+
+    # Tokenize conversations
+    # pdb.set_trace()
+    if has_image:
+        input_ids = torch.stack([tokenizer_image_token(prompt, tokenizer, return_tensors='pt') for prompt in conversations], dim=0)
+    else:
+        input_ids = tokenizer(
+            conversations,
+            return_tensors="pt",
+            padding="longest",
+            max_length=tokenizer.model_max_length,
+            truncation=True,
+        ).input_ids
+    targets = input_ids.clone()
+
+    assert conv.sep_style == conversation_lib.SeparatorStyle.TWO or conv.sep_style == conversation_lib.SeparatorStyle.CHATGLM or conv.sep_style == conversation_lib.SeparatorStyle.DOLLY
+
+    # Mask targets
+    sep = conv.sep + conv.roles[1] + ": "
+    for conversation, target in zip(conversations, targets):
+        total_len = int(target.ne(tokenizer.pad_token_id).sum())
+
+        rounds = conversation.split(conv.sep2)
+        cur_len = 0
+        for i, rou in enumerate(rounds):
+            if rou == "":
+                break
+
+            parts = rou.split(sep)
+            if len(parts) != 2:
+                break
+            parts[0] += sep
+            
+            if has_image:
+                round_len = len(tokenizer_image_token(rou, tokenizer))
+                instruction_len = len(tokenizer_image_token(parts[0], tokenizer)) - 2
+            else:
+                round_len = len(tokenizer(rou).input_ids)
+                instruction_len = len(tokenizer(parts[0]).input_ids) - 2
+                
+            # round_len = len(tokenizer(rou).input_ids)
+            # instruction_len = len(tokenizer(parts[0]).input_ids)
+
+            # while cur_len+instruction_len <= total_len and target[cur_len+instruction_len-1] != 25:
+            #     instruction_len += 1
+            #     round_len += 1
+
+            target[cur_len:cur_len+instruction_len] = (IGNORE_INDEX)
+            cur_len += round_len
+
+        target[cur_len:] = IGNORE_INDEX
+        
+        if cur_len < tokenizer.model_max_length:
+            if cur_len != total_len:
+                target[:] = IGNORE_INDEX
+                print(
+                    f"WARNING: tokenization mismatch: {cur_len} vs. {total_len}."
+                    f" (ignored)"
+                )
+
+    return dict(input_ids=input_ids, 
+                labels=targets,
+                )
 
 def preprocess_mpt(
     sources,
@@ -728,6 +811,8 @@ def preprocess(
         return preprocess_v1(sources, tokenizer, has_image=has_image)
     if conversation_lib.default_conversation.version == "mpt":
         return preprocess_mpt(sources, tokenizer)
+    if conversation_lib.default_conversation.version == 'qwen':
+        return preprocess_qwen(sources, tokenizer, has_image=has_image)
     # add end signal and concatenate together
     conversations = []
     for source in sources:
@@ -945,6 +1030,29 @@ def train():
                 cache_dir=training_args.cache_dir,
                 **bnb_model_from_pretrained_args
             )
+        elif 'qwen' in model_args.model_name_or_path.lower():
+            # if model_args.tune_mm_mlp_adapter:
+            #     model = MoLoRAQwenvQwen2ForCausalLM.from_pretrained(
+            #         model_args.model_name_or_path,
+            #         config=config,
+            #         cache_dir=training_args.cache_dir,
+            #         **bnb_model_from_pretrained_args
+            #     )
+            # else:
+            config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+            moe_config = MoLoRAQwenV2Config(**config.to_dict())
+            moe_config.num_experts = model_args.num_experts 
+            moe_config.num_experts_per_token = model_args.num_experts_per_token
+
+            moe_config.share_expert = model_args.share_expert
+            moe_config.architectures = ["MoLoRAQwen2ForCausalLM"]
+            rank0_print(moe_config)
+            model = MoLoRAQwenvQwen2ForCausalLM.from_pretrained(
+                model_args.model_name_or_path,
+                config=moe_config,
+                cache_dir=training_args.cache_dir,
+                **bnb_model_from_pretrained_args
+            )
         else:
             config = transformers.AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             moe_config = MoELlavaConfig(**config.to_dict())
@@ -1051,7 +1159,9 @@ def train():
         # rank0_print(name, param.dtype, param.requires_grad)
     
     # new lora version
-    model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
+    if not model_args.tune_mm_mlp_adapter:
+        
+        model = get_mixoflora_model(model, model_args.num_experts, model_args.num_experts_per_token, lora_config=lora_config, inference_mode=False)
     # for name, param in model.named_parameters():
     #     rank0_print(name, param.dtype, param.requires_grad)
     rank0_print(model)
@@ -1081,6 +1191,11 @@ def train():
             )
     elif model_args.version == "v0.5":
         tokenizer.pad_token = tokenizer.unk_token
+    elif model_args.version == "qwen":
+        if model_args.version in conversation_lib.conv_templates:
+            conversation_lib.default_conversation = conversation_lib.conv_templates[model_args.version]
+        else:
+            conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1"]
     else:
         tokenizer.pad_token = tokenizer.unk_token
         if model_args.version in conversation_lib.conv_templates:

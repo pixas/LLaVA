@@ -3,13 +3,18 @@ from enum import auto, Enum
 from typing import List, Tuple
 
 
+
 class SeparatorStyle(Enum):
     """Different separator style."""
     SINGLE = auto()
     TWO = auto()
-    MPT = auto()
-    PLAIN = auto()
+    DOLLY = auto()
+    CHATGLM = auto()
+    DOCTOR = auto()
+    BLOOM = auto()
     LLAMA_2 = auto()
+    PLAIN = auto()
+    
 
 
 @dataclasses.dataclass
@@ -357,6 +362,17 @@ conv_llava_v1_mmtag = Conversation(
     version="v1_mmtag",
 )
 
+conv_qwen = Conversation(
+    system="",
+    roles=("USER", "ASSISTANT"),
+    messages=(),
+    offset=0,
+    sep_style=SeparatorStyle.TWO,
+    sep="<|im_end|>",
+    sep2="<|im_end|>",
+)
+
+
 default_conversation = conv_vicuna_v1
 conv_templates = {
     "default": conv_vicuna_v0,
@@ -374,6 +390,7 @@ conv_templates = {
     "llava_llama_2": conv_llava_llama_2,
 
     "mpt": conv_mpt,
+    "qwen": conv_qwen
 }
 
 
