@@ -177,7 +177,9 @@ class MoLoRALinear(nn.Linear, LoRALayer):
         if num_experts > 1:
             self.switch = nn.Linear(in_features, num_experts)
         self.use_lbl_loss = use_lbl_loss    
-        
+        # self.rs = [
+        #     128, 64, 32, 16
+        # ]
         # Actual trainable parameters
         if r > 0:
             self.experts = nn.ModuleList([
